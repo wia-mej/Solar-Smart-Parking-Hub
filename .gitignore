@@ -1,0 +1,48 @@
+# Java / Spring Boot (backend/)
+backend/target/
+backend/*.class
+backend/*.jar
+
+# Python / FastAPI (ai-service/)
+ai-service/**/__pycache__/
+ai-service/**/*.pyc
+ai-service/.venv/
+ai-service/venv/
+ai-service/.pytest_cache/
+ai-service/.coverage
+ai-service/app/model/*.pkl
+ai-service/app/model/*.joblib
+
+# Node (mobile/, backoffice/)
+mobile/node_modules/
+mobile/.expo/
+mobile/android/build/
+mobile/android/.gradle/
+mobile/ios/Pods/
+backoffice/node_modules/
+backoffice/dist/
+backoffice/.angular/
+backoffice/coverage/
+
+# Terraform (deployment/terraform/)
+deployment/terraform/.terraform/
+deployment/terraform/*.tfstate
+deployment/terraform/*.tfstate.backup
+deployment/terraform/*.tfvars
+
+# Secrets / local config
+.env
+.env.local
+*.pem
+*.key
+kubeconfig*
+
+# Logs
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
