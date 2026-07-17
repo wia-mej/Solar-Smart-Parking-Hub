@@ -10,8 +10,7 @@ ai-service/.venv/
 ai-service/venv/
 ai-service/.pytest_cache/
 ai-service/.coverage
-ai-service/app/model/*.pkl
-ai-service/app/model/*.joblib
+
 
 # Node (mobile/, backoffice/)
 mobile/node_modules/
