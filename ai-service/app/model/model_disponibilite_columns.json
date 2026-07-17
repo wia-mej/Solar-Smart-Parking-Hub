@@ -1,0 +1,15 @@
+{
+  "model_name": "RandomForest",
+  "feature_columns": [
+    "heure_sin",
+    "heure_cos",
+    "mois_sin",
+    "mois_cos",
+    "est_weekend",
+    "jour_semaine",
+    "hub_hub_casablanca",
+    "hub_hub_marrakech",
+    "hub_hub_rabat",
+    "hub_hub_tanger"
+  ]
+}

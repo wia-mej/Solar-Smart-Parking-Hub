@@ -1,0 +1,16 @@
+{
+  "model_name": "XGBoost",
+  "feature_columns": [
+    "radiation_wm2",
+    "temperature_c",
+    "heure_sin",
+    "heure_cos",
+    "mois_sin",
+    "mois_cos",
+    "est_weekend",
+    "hub_hub_casablanca",
+    "hub_hub_marrakech",
+    "hub_hub_rabat",
+    "hub_hub_tanger"
+  ]
+}
