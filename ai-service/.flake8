@@ -1,0 +1,4 @@
+[flake8]
+max-line-length = 120
+extend-ignore = W293, W291, W292, E221
+exclude = venv, __pycache__, app/model, data
