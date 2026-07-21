@@ -36,7 +36,7 @@ def add_time_features(df: pd.DataFrame, ts_col: str = "timestamp") -> pd.DataFra
  
  
 def build_features_production(path_in: str = "data/production_energie_reelle.csv",
-                               path_out: str = "data/features_production.csv") -> pd.DataFrame:
+                              path_out: str = "data/features_production.csv") -> pd.DataFrame:
     df = pd.read_csv(path_in, parse_dates=["timestamp"])
     df = df.sort_values(["hub_station_id", "timestamp"]).reset_index(drop=True)
     df = add_time_features(df)
@@ -58,7 +58,7 @@ def build_features_production(path_in: str = "data/production_energie_reelle.csv
  
  
 def build_features_disponibilite(path_in: str = "data/sessions_charge.csv",
-                                  path_out: str = "data/features_disponibilite.csv") -> pd.DataFrame:
+                                 path_out: str = "data/features_disponibilite.csv") -> pd.DataFrame:
     sessions = pd.read_csv(path_in, parse_dates=["heure_debut", "heure_fin"])
  
     rows = []
