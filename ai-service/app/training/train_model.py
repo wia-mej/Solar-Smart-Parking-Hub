@@ -83,13 +83,14 @@ def compare_models(X: pd.DataFrame, y: pd.Series, label: str):
         print(f"{name:<15} {mae:>10.3f} {rmse:>10.3f}")
 
     best_name = min(results, key=lambda n: results[n]["rmse"])
+    best = results[best_name]
     print(f"-> Modele retenu : {best_name} (RMSE le plus bas)")
-    return best_name, results[best_name]["model"]
+    return best_name, best["model"], best["mae"], best["rmse"]
 
 
 def train_and_save(path: str, target_col: str, label: str, output_prefix: str):
     X, y, feature_cols = load_and_encode(path, target_col)
-    best_name, best_model = compare_models(X, y, label)
+    best_name, best_model, mae, rmse = compare_models(X, y, label)
 
     # reentrainement final sur l'integralite des donnees disponibles
     best_model.fit(X, y)
@@ -97,7 +98,16 @@ def train_and_save(path: str, target_col: str, label: str, output_prefix: str):
     os.makedirs("../model", exist_ok=True)
     joblib.dump(best_model, f"../model/{output_prefix}.pkl")
     with open(f"../model/{output_prefix}_columns.json", "w") as f:
-        json.dump({"model_name": best_name, "feature_columns": feature_cols}, f, indent=2)
+        json.dump(
+            {
+                "model_name": best_name,
+                "feature_columns": feature_cols,
+                "mae": mae,
+                "rmse": rmse,
+            },
+            f,
+            indent=2,
+        )
 
     print(f"Modele sauvegarde : app/model/{output_prefix}.pkl")
 

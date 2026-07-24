@@ -12,5 +12,7 @@
     "hub_hub_marrakech",
     "hub_hub_rabat",
     "hub_hub_tanger"
-  ]
+  ],
+  "mae": 0.014155564895773371,
+  "rmse": 0.025205840895827596
 }
