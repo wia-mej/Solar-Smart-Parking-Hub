@@ -9,5 +9,6 @@ requests
 openpyxl
 pytest
 httpx
-flake8prometheus-fastapi-instrumentator==8.0.2
+flake8
+prometheus-fastapi-instrumentator==8.0.2
 prometheus_client==0.25.0
