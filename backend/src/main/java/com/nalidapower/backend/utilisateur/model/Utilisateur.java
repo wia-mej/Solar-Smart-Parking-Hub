@@ -1,4 +1,4 @@
-package com.nalidapower.backend.model;
+package com.nalidapower.backend.utilisateur.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
