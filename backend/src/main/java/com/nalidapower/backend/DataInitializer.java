@@ -1,7 +1,10 @@
 package com.nalidapower.backend;
 
-import com.nalidapower.backend.model.*;
-import com.nalidapower.backend.repository.*;
+import com.nalidapower.backend.station.model.*;
+import com.nalidapower.backend.station.repository.StationRepository;
+import com.nalidapower.backend.utilisateur.model.RoleUtilisateur;
+import com.nalidapower.backend.utilisateur.model.Utilisateur;
+import com.nalidapower.backend.utilisateur.repository.UtilisateurRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 

@@ -1,4 +1,4 @@
-package com.nalidapower.backend.model;
+package com.nalidapower.backend.station.model;
 
 public enum StatutBorne {
     DISPONIBLE,

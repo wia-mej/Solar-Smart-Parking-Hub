@@ -1,4 +1,4 @@
-package com.nalidapower.backend.model;
+package com.nalidapower.backend.station.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

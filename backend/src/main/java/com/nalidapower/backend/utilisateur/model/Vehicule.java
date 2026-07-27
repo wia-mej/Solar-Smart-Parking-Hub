@@ -1,4 +1,4 @@
-package com.nalidapower.backend.model;
+package com.nalidapower.backend.utilisateur.model;
 
 public class Vehicule {
 
