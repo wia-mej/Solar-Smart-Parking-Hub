@@ -1,5 +1,9 @@
 package com.nalidapower.backend;
 
+import com.nalidapower.backend.reservation.model.OrigineReservation;
+import com.nalidapower.backend.reservation.model.Reservation;
+import com.nalidapower.backend.reservation.model.StatutReservation;
+import com.nalidapower.backend.reservation.repository.ReservationRepository;
 import com.nalidapower.backend.station.model.*;
 import com.nalidapower.backend.station.repository.StationRepository;
 import com.nalidapower.backend.utilisateur.model.RoleUtilisateur;
@@ -15,10 +19,12 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UtilisateurRepository utilisateurRepository;
     private final StationRepository stationRepository;
+    private final ReservationRepository reservationRepository;
 
-    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository) {
+    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository, ReservationRepository reservationRepository) {
         this.utilisateurRepository = utilisateurRepository;
         this.stationRepository = stationRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     @Override
@@ -55,6 +61,28 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println(">>> Station test enregistrée avec id : " + station.getId());
         } else {
             System.out.println(">>> Collection stations déjà peuplée, pas d'insertion.");
+        }
+
+        if (reservationRepository.count() == 0) {
+            utilisateurRepository.findAll().stream().findFirst().ifPresent(utilisateur ->
+                    stationRepository.findAll().stream().findFirst().ifPresent(station -> {
+                        Reservation reservation = new Reservation();
+                        reservation.setUtilisateurId(utilisateur.getId());
+                        reservation.setStationId(station.getId());
+                        reservation.setBorneIdentifiant(station.getBornes().get(0).getIdentifiant());
+                        reservation.setVehiculeImmatriculation("TEST-1234");
+                        reservation.setDateDebut(LocalDateTime.now().plusHours(1));
+                        reservation.setDateFin(LocalDateTime.now().plusHours(2));
+                        reservation.setStatut(StatutReservation.CONFIRMEE);
+                        reservation.setOrigine(OrigineReservation.RESERVEE);
+                        reservation.setDateCreation(LocalDateTime.now());
+
+                        reservationRepository.save(reservation);
+                        System.out.println(">>> Reservation test enregistrée avec id : " + reservation.getId());
+                    })
+            );
+        } else {
+            System.out.println(">>> Collection reservations déjà peuplée, pas d'insertion.");
         }
     }
 }
