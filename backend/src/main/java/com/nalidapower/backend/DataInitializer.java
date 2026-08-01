@@ -4,6 +4,9 @@ import com.nalidapower.backend.acceslog.model.AccesLog;
 import com.nalidapower.backend.acceslog.model.ResultatAcces;
 import com.nalidapower.backend.acceslog.model.TypeEvenementAcces;
 import com.nalidapower.backend.acceslog.repository.AccesLogRepository;
+import com.nalidapower.backend.prediction.model.Prediction;
+import com.nalidapower.backend.prediction.model.TypePrediction;
+import com.nalidapower.backend.prediction.repository.PredictionRepository;
 import com.nalidapower.backend.productionenergie.model.ProductionEnergie;
 import com.nalidapower.backend.productionenergie.model.SourceProduction;
 import com.nalidapower.backend.productionenergie.repository.ProductionEnergieRepository;
@@ -34,14 +37,16 @@ public class DataInitializer implements CommandLineRunner {
     private final SessionChargeRepository sessionChargeRepository;
     private final AccesLogRepository accesLogRepository;
     private final ProductionEnergieRepository productionEnergieRepository;
+    private final PredictionRepository predictionRepository;
 
-    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository, ReservationRepository reservationRepository, SessionChargeRepository sessionChargeRepository, AccesLogRepository accesLogRepository, ProductionEnergieRepository productionEnergieRepository) {
+    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository, ReservationRepository reservationRepository, SessionChargeRepository sessionChargeRepository, AccesLogRepository accesLogRepository, ProductionEnergieRepository productionEnergieRepository, PredictionRepository predictionRepository) {
         this.utilisateurRepository = utilisateurRepository;
         this.stationRepository = stationRepository;
         this.reservationRepository = reservationRepository;
         this.sessionChargeRepository = sessionChargeRepository;
         this.accesLogRepository = accesLogRepository;
         this.productionEnergieRepository = productionEnergieRepository;
+        this.predictionRepository = predictionRepository;
     }
 
     @Override
@@ -159,6 +164,22 @@ public class DataInitializer implements CommandLineRunner {
             });
         } else {
             System.out.println(">>> Collection production_energie déjà peuplée, pas d'insertion.");
+        }
+
+        if (predictionRepository.count() == 0) {
+            stationRepository.findAll().stream().findFirst().ifPresent(station -> {
+                Prediction prediction = new Prediction();
+                prediction.setStationId(station.getId());
+                prediction.setTypePrediction(TypePrediction.PRODUCTION);
+                prediction.setTimestampCible(LocalDateTime.now().plusHours(1));
+                prediction.setValeurPredite(42.7);
+                prediction.setDateGeneration(LocalDateTime.now());
+
+                predictionRepository.save(prediction);
+                System.out.println(">>> Prediction test enregistrée avec id : " + prediction.getId());
+            });
+        } else {
+            System.out.println(">>> Collection predictions déjà peuplée, pas d'insertion.");
         }
     }
 }
