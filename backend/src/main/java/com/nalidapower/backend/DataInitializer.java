@@ -4,6 +4,10 @@ import com.nalidapower.backend.reservation.model.OrigineReservation;
 import com.nalidapower.backend.reservation.model.Reservation;
 import com.nalidapower.backend.reservation.model.StatutReservation;
 import com.nalidapower.backend.reservation.repository.ReservationRepository;
+import com.nalidapower.backend.sessioncharge.model.OrigineSession;
+import com.nalidapower.backend.sessioncharge.model.SessionCharge;
+import com.nalidapower.backend.sessioncharge.model.StatutSession;
+import com.nalidapower.backend.sessioncharge.repository.SessionChargeRepository;
 import com.nalidapower.backend.station.model.*;
 import com.nalidapower.backend.station.repository.StationRepository;
 import com.nalidapower.backend.utilisateur.model.RoleUtilisateur;
@@ -20,11 +24,13 @@ public class DataInitializer implements CommandLineRunner {
     private final UtilisateurRepository utilisateurRepository;
     private final StationRepository stationRepository;
     private final ReservationRepository reservationRepository;
+    private final SessionChargeRepository sessionChargeRepository;
 
-    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository, ReservationRepository reservationRepository) {
+    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository, ReservationRepository reservationRepository, SessionChargeRepository sessionChargeRepository) {
         this.utilisateurRepository = utilisateurRepository;
         this.stationRepository = stationRepository;
         this.reservationRepository = reservationRepository;
+        this.sessionChargeRepository = sessionChargeRepository;
     }
 
     @Override
@@ -83,6 +89,29 @@ public class DataInitializer implements CommandLineRunner {
             );
         } else {
             System.out.println(">>> Collection reservations déjà peuplée, pas d'insertion.");
+        }
+
+        if (sessionChargeRepository.count() == 0) {
+            utilisateurRepository.findAll().stream().findFirst().ifPresent(utilisateur ->
+                    stationRepository.findAll().stream().findFirst().ifPresent(station -> {
+                        SessionCharge session = new SessionCharge();
+                        session.setUtilisateurId(utilisateur.getId());
+                        session.setStationId(station.getId());
+                        session.setBorneIdentifiant(station.getBornes().get(0).getIdentifiant());
+                        session.setVehiculeImmatriculation("TEST-1234");
+                        session.setDateDebut(LocalDateTime.now().minusMinutes(30));
+                        session.setDateFin(LocalDateTime.now());
+                        session.setEnergieConsommeeKwh(12.5);
+                        session.setStatut(StatutSession.TERMINEE);
+                        session.setOrigine(OrigineSession.WALK_IN);
+                        session.setDateCreation(LocalDateTime.now());
+
+                        sessionChargeRepository.save(session);
+                        System.out.println(">>> Session charge test enregistrée avec id : " + session.getId());
+                    })
+            );
+        } else {
+            System.out.println(">>> Collection sessions_charge déjà peuplée, pas d'insertion.");
         }
     }
 }
