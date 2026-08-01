@@ -1,5 +1,9 @@
 package com.nalidapower.backend;
 
+import com.nalidapower.backend.acceslog.model.AccesLog;
+import com.nalidapower.backend.acceslog.model.ResultatAcces;
+import com.nalidapower.backend.acceslog.model.TypeEvenementAcces;
+import com.nalidapower.backend.acceslog.repository.AccesLogRepository;
 import com.nalidapower.backend.reservation.model.OrigineReservation;
 import com.nalidapower.backend.reservation.model.Reservation;
 import com.nalidapower.backend.reservation.model.StatutReservation;
@@ -25,12 +29,14 @@ public class DataInitializer implements CommandLineRunner {
     private final StationRepository stationRepository;
     private final ReservationRepository reservationRepository;
     private final SessionChargeRepository sessionChargeRepository;
+    private final AccesLogRepository accesLogRepository;
 
-    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository, ReservationRepository reservationRepository, SessionChargeRepository sessionChargeRepository) {
+    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository, ReservationRepository reservationRepository, SessionChargeRepository sessionChargeRepository, AccesLogRepository accesLogRepository) {
         this.utilisateurRepository = utilisateurRepository;
         this.stationRepository = stationRepository;
         this.reservationRepository = reservationRepository;
         this.sessionChargeRepository = sessionChargeRepository;
+        this.accesLogRepository = accesLogRepository;
     }
 
     @Override
@@ -112,6 +118,26 @@ public class DataInitializer implements CommandLineRunner {
             );
         } else {
             System.out.println(">>> Collection sessions_charge déjà peuplée, pas d'insertion.");
+        }
+
+        if (accesLogRepository.count() == 0) {
+            utilisateurRepository.findAll().stream().findFirst().ifPresent(utilisateur ->
+                    stationRepository.findAll().stream().findFirst().ifPresent(station -> {
+                        AccesLog log = new AccesLog();
+                        log.setUtilisateurId(utilisateur.getId());
+                        log.setStationId(station.getId());
+                        log.setBorneIdentifiant(station.getBornes().get(0).getIdentifiant());
+                        log.setTypeEvenement(TypeEvenementAcces.DEMARRAGE_SESSION);
+                        log.setResultat(ResultatAcces.SUCCES);
+                        log.setMessage("Session démarrée avec succès");
+                        log.setTimestamp(LocalDateTime.now());
+
+                        accesLogRepository.save(log);
+                        System.out.println(">>> Acces log test enregistré avec id : " + log.getId());
+                    })
+            );
+        } else {
+            System.out.println(">>> Collection acces_logs déjà peuplée, pas d'insertion.");
         }
     }
 }
