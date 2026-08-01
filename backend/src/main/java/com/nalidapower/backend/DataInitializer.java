@@ -4,6 +4,9 @@ import com.nalidapower.backend.acceslog.model.AccesLog;
 import com.nalidapower.backend.acceslog.model.ResultatAcces;
 import com.nalidapower.backend.acceslog.model.TypeEvenementAcces;
 import com.nalidapower.backend.acceslog.repository.AccesLogRepository;
+import com.nalidapower.backend.productionenergie.model.ProductionEnergie;
+import com.nalidapower.backend.productionenergie.model.SourceProduction;
+import com.nalidapower.backend.productionenergie.repository.ProductionEnergieRepository;
 import com.nalidapower.backend.reservation.model.OrigineReservation;
 import com.nalidapower.backend.reservation.model.Reservation;
 import com.nalidapower.backend.reservation.model.StatutReservation;
@@ -30,13 +33,15 @@ public class DataInitializer implements CommandLineRunner {
     private final ReservationRepository reservationRepository;
     private final SessionChargeRepository sessionChargeRepository;
     private final AccesLogRepository accesLogRepository;
+    private final ProductionEnergieRepository productionEnergieRepository;
 
-    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository, ReservationRepository reservationRepository, SessionChargeRepository sessionChargeRepository, AccesLogRepository accesLogRepository) {
+    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository, ReservationRepository reservationRepository, SessionChargeRepository sessionChargeRepository, AccesLogRepository accesLogRepository, ProductionEnergieRepository productionEnergieRepository) {
         this.utilisateurRepository = utilisateurRepository;
         this.stationRepository = stationRepository;
         this.reservationRepository = reservationRepository;
         this.sessionChargeRepository = sessionChargeRepository;
         this.accesLogRepository = accesLogRepository;
+        this.productionEnergieRepository = productionEnergieRepository;
     }
 
     @Override
@@ -138,6 +143,22 @@ public class DataInitializer implements CommandLineRunner {
             );
         } else {
             System.out.println(">>> Collection acces_logs déjà peuplée, pas d'insertion.");
+        }
+
+        if (productionEnergieRepository.count() == 0) {
+            stationRepository.findAll().stream().findFirst().ifPresent(station -> {
+                ProductionEnergie production = new ProductionEnergie();
+                production.setStationId(station.getId());
+                production.setTimestamp(LocalDateTime.now());
+                production.setProductionKw(38.4);
+                production.setIrradiationWm2(720.0);
+                production.setSource(SourceProduction.MESUREE);
+
+                productionEnergieRepository.save(production);
+                System.out.println(">>> Production energie test enregistrée avec id : " + production.getId());
+            });
+        } else {
+            System.out.println(">>> Collection production_energie déjà peuplée, pas d'insertion.");
         }
     }
 }
