@@ -4,6 +4,11 @@ import com.nalidapower.backend.acceslog.model.AccesLog;
 import com.nalidapower.backend.acceslog.model.ResultatAcces;
 import com.nalidapower.backend.acceslog.model.TypeEvenementAcces;
 import com.nalidapower.backend.acceslog.repository.AccesLogRepository;
+import com.nalidapower.backend.alerte.model.Alerte;
+import com.nalidapower.backend.alerte.model.NiveauAlerte;
+import com.nalidapower.backend.alerte.model.StatutAlerte;
+import com.nalidapower.backend.alerte.model.TypeAlerte;
+import com.nalidapower.backend.alerte.repository.AlerteRepository;
 import com.nalidapower.backend.prediction.model.Prediction;
 import com.nalidapower.backend.prediction.model.TypePrediction;
 import com.nalidapower.backend.prediction.repository.PredictionRepository;
@@ -38,8 +43,10 @@ public class DataInitializer implements CommandLineRunner {
     private final AccesLogRepository accesLogRepository;
     private final ProductionEnergieRepository productionEnergieRepository;
     private final PredictionRepository predictionRepository;
+    private final AlerteRepository alerteRepository;
 
-    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository, ReservationRepository reservationRepository, SessionChargeRepository sessionChargeRepository, AccesLogRepository accesLogRepository, ProductionEnergieRepository productionEnergieRepository, PredictionRepository predictionRepository) {
+    public DataInitializer(UtilisateurRepository utilisateurRepository, StationRepository stationRepository, ReservationRepository reservationRepository, SessionChargeRepository sessionChargeRepository, AccesLogRepository accesLogRepository, ProductionEnergieRepository productionEnergieRepository, PredictionRepository predictionRepository
+    , AlerteRepository alerteRepository) {
         this.utilisateurRepository = utilisateurRepository;
         this.stationRepository = stationRepository;
         this.reservationRepository = reservationRepository;
@@ -47,6 +54,7 @@ public class DataInitializer implements CommandLineRunner {
         this.accesLogRepository = accesLogRepository;
         this.productionEnergieRepository = productionEnergieRepository;
         this.predictionRepository = predictionRepository;
+        this.alerteRepository = alerteRepository;
     }
 
     @Override
@@ -180,6 +188,24 @@ public class DataInitializer implements CommandLineRunner {
             });
         } else {
             System.out.println(">>> Collection predictions déjà peuplée, pas d'insertion.");
+        }
+
+        if (alerteRepository.count() == 0) {
+            stationRepository.findAll().stream().findFirst().ifPresent(station -> {
+                Alerte alerte = new Alerte();
+                alerte.setStationId(station.getId());
+                alerte.setBorneIdentifiant(station.getBornes().get(0).getIdentifiant());
+                alerte.setType(TypeAlerte.MAINTENANCE_REQUISE);
+                alerte.setNiveau(NiveauAlerte.AVERTISSEMENT);
+                alerte.setStatut(StatutAlerte.ACTIVE);
+                alerte.setMessage("Vérification recommandée sur la borne B1");
+                alerte.setDateCreation(LocalDateTime.now());
+
+                alerteRepository.save(alerte);
+                System.out.println(">>> Alerte test enregistrée avec id : " + alerte.getId());
+            });
+        } else {
+            System.out.println(">>> Collection alertes déjà peuplée, pas d'insertion.");
         }
     }
 }
