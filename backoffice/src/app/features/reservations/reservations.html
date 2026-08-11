@@ -1,0 +1,102 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Réservations</h1>
+      <p class="subtitle">Consultation des réservations — support client</p>
+    </div>
+  </header>
+
+  <section class="stats-row">
+    <div class="stat-pill">
+      <span class="stat-pill-value">{{ todayCount }}</span>
+      <span class="stat-pill-label">Aujourd'hui</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-pill-value teal">{{ confirmedCount }}</span>
+      <span class="stat-pill-label">Confirmées</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-pill-value orange">{{ pendingCount }}</span>
+      <span class="stat-pill-label">En attente</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-pill-value red">{{ cancelledCount }}</span>
+      <span class="stat-pill-label">Annulées</span>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        placeholder="Rechercher un client ou une station..."
+        [(ngModel)]="searchTerm"
+      />
+    </div>
+
+    <div class="status-filters">
+      <button class="filter-chip" [class.active]="statusFilter === 'all'" (click)="setStatusFilter('all')">
+        Toutes
+      </button>
+      <button class="filter-chip" [class.active]="statusFilter === 'CONFIRMEE'" (click)="setStatusFilter('CONFIRMEE')">
+        Confirmées
+      </button>
+      <button class="filter-chip" [class.active]="statusFilter === 'EN_ATTENTE'" (click)="setStatusFilter('EN_ATTENTE')">
+        En attente
+      </button>
+      <button class="filter-chip" [class.active]="statusFilter === 'TERMINEE'" (click)="setStatusFilter('TERMINEE')">
+        Terminées
+      </button>
+      <button class="filter-chip" [class.active]="statusFilter === 'ANNULEE'" (click)="setStatusFilter('ANNULEE')">
+        Annulées
+      </button>
+    </div>
+  </div>
+
+  <section class="card table-card">
+    <table class="reservations-table">
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th>Station</th>
+          <th>Borne</th>
+          <th>Date</th>
+          <th>Horaire</th>
+          <th>Origine</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (reservation of filteredReservations; track reservation.id) {
+          <tr>
+            <td class="cell-client">{{ reservation.client }}</td>
+            <td class="cell-muted">{{ reservation.station }}</td>
+            <td>
+              <span class="borne-tag">{{ reservation.borne }}</span>
+            </td>
+            <td class="cell-muted">{{ formatDate(reservation.date) }}</td>
+            <td class="cell-muted">{{ reservation.heureDebut }} – {{ reservation.heureFin }}</td>
+            <td>
+              <span class="origin-tag" [class.walkin]="reservation.origine === 'WALK_IN'">
+                {{ origineLabels[reservation.origine] }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [class]="'status-' + reservation.statut.toLowerCase()">
+                {{ statusLabels[reservation.statut] }}
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="empty-row">Aucune réservation ne correspond à votre recherche.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+</div>

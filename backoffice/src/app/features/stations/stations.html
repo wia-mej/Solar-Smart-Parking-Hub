@@ -1,0 +1,116 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Stations & Bornes</h1>
+      <p class="subtitle">
+        {{ stations.length }} station{{ stations.length > 1 ? 's' : '' }} — gestion des hubs de recharge solaire
+      </p>
+    </div>
+    <button class="btn-primary">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      Nouvelle station
+    </button>
+  </header>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        placeholder="Rechercher une station ou une ville..."
+        [(ngModel)]="searchTerm"
+      />
+    </div>
+
+    <div class="status-filters">
+      <button class="filter-chip" [class.active]="statusFilter === 'all'" (click)="setStatusFilter('all')">
+        Toutes
+      </button>
+      <button class="filter-chip" [class.active]="statusFilter === 'ACTIVE'" (click)="setStatusFilter('ACTIVE')">
+        Actives
+      </button>
+      <button class="filter-chip" [class.active]="statusFilter === 'MAINTENANCE'" (click)="setStatusFilter('MAINTENANCE')">
+        Maintenance
+      </button>
+      <button class="filter-chip" [class.active]="statusFilter === 'HORS_SERVICE'" (click)="setStatusFilter('HORS_SERVICE')">
+        Hors service
+      </button>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="state-message">Chargement des stations...</div>
+  } @else if (errorMessage) {
+    <div class="state-message error">
+      {{ errorMessage }}
+      <button class="retry-btn" (click)="loadStations()">Réessayer</button>
+    </div>
+  } @else {
+    <section class="stations-grid">
+      @for (station of filteredStations; track station.id) {
+        <div class="station-card">
+          <div class="station-card-header">
+            <div>
+              <h3>{{ station.nom }}</h3>
+              <span class="city">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                {{ station.ville }}
+              </span>
+            </div>
+            <span class="status-badge" [class]="'status-' + station.statut.toLowerCase()">
+              {{ statusLabels[station.statut] }}
+            </span>
+          </div>
+
+          <div class="station-metrics">
+            <div class="metric">
+              <span class="metric-value">{{ station.bornes.length }}</span>
+              <span class="metric-label">Bornes</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value">{{ station.puissanceSolaireInstalleeKw }} kW</span>
+              <span class="metric-label">Puissance installée</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value">{{ occupancyPercent(station) }}%</span>
+              <span class="metric-label">Occupation</span>
+            </div>
+          </div>
+
+          <div class="bornes-breakdown">
+            <div class="breakdown-bar">
+              @if (bornesOccupied(station) > 0) {
+                <span
+                  class="segment occupied"
+                  [style.width.%]="(bornesOccupied(station) / station.bornes.length) * 100"
+                ></span>
+              }
+              @if (bornesBroken(station) > 0) {
+                <span
+                  class="segment broken"
+                  [style.width.%]="(bornesBroken(station) / station.bornes.length) * 100"
+                ></span>
+              }
+            </div>
+            <div class="breakdown-legend">
+              <span><span class="dot teal"></span> {{ bornesOccupied(station) }} occupées</span>
+              <span><span class="dot gray"></span> {{ bornesFree(station) }} libres</span>
+              <span><span class="dot red"></span> {{ bornesBroken(station) }} en panne</span>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state">Aucune station ne correspond à votre recherche.</div>
+      }
+    </section>
+  }
+</div>
