@@ -1,0 +1,145 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Vue d'ensemble</h1>
+      <p class="subtitle">Données en temps réel — actualisé il y a {{ lastUpdatedSeconds }} s</p>
+    </div>
+    <button class="station-filter">
+      Toutes les stations
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </button>
+  </header>
+
+  <section class="stats-grid">
+    @for (stat of stats; track stat.label) {
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" [class]="'bg-' + stat.iconBg">
+            @switch (stat.icon) {
+              @case ('dollar') {
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              }
+              @case ('users') {
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              }
+              @case ('activity') {
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+              }
+              @case ('zap') {
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              }
+            }
+          </div>
+          <span class="badge" [class.badge-down]="!stat.badgeUp">
+            {{ stat.badgeUp ? '↗' : '↘' }} {{ stat.badgeText }}
+          </span>
+        </div>
+        <div class="stat-value">
+          {{ stat.value }}
+          @if (stat.unit) { <span class="stat-unit">{{ stat.unit }}</span> }
+        </div>
+        <div class="stat-label">{{ stat.label }}</div>
+      </div>
+    }
+  </section>
+
+  <section class="charts-grid">
+    <div class="card chart-card">
+      <div class="card-header">
+        <div>
+          <h3>Production d'énergie</h3>
+          <p class="subtitle">Réelle vs prédite — aujourd'hui (kWh)</p>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="line-swatch solid"></span> réelle</span>
+          <span class="legend-item"><span class="line-swatch dashed"></span> prédite</span>
+        </div>
+      </div>
+
+      <svg class="chart-svg" [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.35" />
+            <stop offset="100%" stop-color="var(--teal)" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <path [attr.d]="areaPath" fill="url(#areaFill)" stroke="none"></path>
+        <path [attr.d]="predictedPath" fill="none" stroke="var(--orange)" stroke-width="2" stroke-dasharray="6 5"></path>
+        <path [attr.d]="realPath" fill="none" stroke="var(--teal)" stroke-width="2.5"></path>
+      </svg>
+      <div class="chart-x-labels">
+        @for (label of xLabels; track label) {
+          <span>{{ label }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="card donut-card">
+      <div class="card-header">
+        <div>
+          <h3>Occupation des bornes</h3>
+          <p class="subtitle">Temps réel — {{ occupancy.total }} bornes</p>
+        </div>
+      </div>
+
+      <div class="donut-wrap">
+        <svg viewBox="0 0 180 180" width="180" height="180">
+        <circle cx="90" cy="90" r="70" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="16"></circle>          <circle
+            cx="90" cy="90" r="70" fill="none"
+            stroke="var(--teal)" stroke-width="16"
+            stroke-linecap="round"
+            [attr.stroke-dasharray]="donutDashArray"
+            transform="rotate(-90 90 90)"
+          ></circle>
+        </svg>
+        <div class="donut-center">
+          <span class="donut-percent">{{ occupancy.percent }}%</span>
+          <span class="donut-label">OCCUPÉES</span>
+        </div>
+      </div>
+
+      <ul class="occupancy-list">
+        <li><span class="dot teal"></span> Occupées <span class="value">{{ occupancy.occupied }}</span></li>
+        <li><span class="dot gray"></span> Libres <span class="value">{{ occupancy.free }}</span></li>
+        <li><span class="dot red"></span> En panne <span class="value">{{ occupancy.broken }}</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card alerts-card">
+    <div class="card-header">
+      <div>
+        <h3>Alertes actives</h3>
+        <p class="subtitle">{{ alertsTotal }} alertes nécessitant une attention</p>
+      </div>
+      <span class="critical-badge">{{ alertsCritical }} critiques</span>
+    </div>
+
+    <ul class="alert-list">
+      @for (alert of alerts; track alert.label) {
+        <li class="alert-row">
+          <span class="alert-dot" [class.critical]="alert.severity === 'critical'"></span>
+          <div class="alert-text">
+            <span class="alert-label">{{ alert.label }}</span>
+            <span class="alert-detail">{{ alert.detail }}</span>
+          </div>
+          <span class="alert-time">{{ alert.time }}</span>
+        </li>
+      }
+    </ul>
+  </section>
+</div>
