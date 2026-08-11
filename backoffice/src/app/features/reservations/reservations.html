@@ -57,46 +57,57 @@
     </div>
   </div>
 
-  <section class="card table-card">
-    <table class="reservations-table">
-      <thead>
-        <tr>
-          <th>Client</th>
-          <th>Station</th>
-          <th>Borne</th>
-          <th>Date</th>
-          <th>Horaire</th>
-          <th>Origine</th>
-          <th>Statut</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (reservation of filteredReservations; track reservation.id) {
+  @if (loading) {
+    <div class="state-message">Chargement des réservations...</div>
+  } @else if (errorMessage) {
+    <div class="state-message error">
+      {{ errorMessage }}
+      <button class="retry-btn" (click)="loadReservations()">Réessayer</button>
+    </div>
+  } @else {
+    <section class="card table-card">
+      <table class="reservations-table">
+        <thead>
           <tr>
-            <td class="cell-client">{{ reservation.client }}</td>
-            <td class="cell-muted">{{ reservation.station }}</td>
-            <td>
-              <span class="borne-tag">{{ reservation.borne }}</span>
-            </td>
-            <td class="cell-muted">{{ formatDate(reservation.date) }}</td>
-            <td class="cell-muted">{{ reservation.heureDebut }} – {{ reservation.heureFin }}</td>
-            <td>
-              <span class="origin-tag" [class.walkin]="reservation.origine === 'WALK_IN'">
-                {{ origineLabels[reservation.origine] }}
-              </span>
-            </td>
-            <td>
-              <span class="status-badge" [class]="'status-' + reservation.statut.toLowerCase()">
-                {{ statusLabels[reservation.statut] }}
-              </span>
-            </td>
+            <th>Client</th>
+            <th>Station</th>
+            <th>Borne</th>
+            <th>Date</th>
+            <th>Horaire</th>
+            <th>Origine</th>
+            <th>Statut</th>
           </tr>
-        } @empty {
-          <tr>
-            <td colspan="7" class="empty-row">Aucune réservation ne correspond à votre recherche.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </section>
+        </thead>
+        <tbody>
+          @for (reservation of filteredReservations; track reservation.id) {
+            <tr>
+              <td class="cell-client">{{ reservation.clientNom }}</td>
+              <td class="cell-muted">{{ reservation.stationNom }}</td>
+              <td>
+                <span class="borne-tag">{{ reservation.borneIdentifiant }}</span>
+              </td>
+              <td class="cell-muted">{{ formatDate(reservation.dateDebut) }}</td>
+              <td class="cell-muted">
+                {{ formatTime(reservation.dateDebut) }} – {{ formatTime(reservation.dateFin) }}
+              </td>
+              <td>
+                <span class="origin-tag" [class.walkin]="reservation.origine === 'WALK_IN'">
+                  {{ origineLabels[reservation.origine] }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" [class]="'status-' + reservation.statut.toLowerCase()">
+                  {{ statusLabels[reservation.statut] }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="empty-row">Aucune réservation ne correspond à votre recherche.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
 </div>
