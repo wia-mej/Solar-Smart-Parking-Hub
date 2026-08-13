@@ -5,6 +5,7 @@ import { Dashboard } from './features/dashboard/dashboard';
 import { Stations } from './features/stations/stations';
 import { Reservations } from './features/reservations/reservations';
 import { Alertes } from './features/alertes/alertes';
+import { Utilisateurs } from './features/utilisateurs/utilisateurs';
 
 export const routes: Routes = [
   {
@@ -16,6 +17,7 @@ export const routes: Routes = [
       { path: 'stations', component: Stations },
       { path: 'reservations', component: Reservations },
       { path: 'alertes', component: Alertes },
+      { path: 'utilisateurs', component: Utilisateurs },
     ],
   },
 ];

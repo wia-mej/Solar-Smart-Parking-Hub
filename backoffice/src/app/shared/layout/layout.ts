@@ -15,7 +15,7 @@ export class Layout {
     { label: 'Vue d\'ensemble', route: '/dashboard', icon: 'grid' },
     { label: 'Stations & Bornes', route: '/stations', icon: 'map-pin' },
     { label: 'Réservations', route: '/reservations', icon: 'calendar' },
-    { label: 'Utilisateurs', route: null, icon: 'users' },
+    { label: 'Utilisateurs', route: '/utilisateurs', icon: 'users' },
     { label: 'Accès & Alertes', route: '/alertes', icon: 'shield' },
     { label: 'Export données', route: null, icon: 'download' },
   ];
