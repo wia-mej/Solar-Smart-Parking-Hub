@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 
+import { AlerteService } from '../../core/services/alerte.service';
+import { AlerteDetail, NiveauAlerte } from '../../core/models/alerte.model';
+
 interface StatCard {
   icon: 'dollar' | 'users' | 'activity' | 'zap';
   iconBg: 'teal' | 'orange';
@@ -8,13 +11,6 @@ interface StatCard {
   label: string;
   badgeText: string;
   badgeUp: boolean;
-}
-
-interface AlertItem {
-  label: string;
-  detail: string;
-  time: string;
-  severity: 'critical' | 'warning';
 }
 
 @Component({
@@ -42,13 +38,31 @@ export class Dashboard implements OnInit {
     percent: 5,
   };
 
-  alerts: AlertItem[] = [
-    { label: 'Borne #12 — Casablanca Centre', detail: 'Hors ligne depuis 40 min', time: 'Il y a 40 min', severity: 'critical' },
-    { label: 'Onduleur RZ2', detail: 'Rendement anormalement bas', time: 'Il y a 1 h', severity: 'critical' },
-    { label: 'Capteur météo — Rabat Agdal', detail: 'Données manquantes', time: 'Il y a 2 h', severity: 'warning' },
-  ];
-  alertsTotal = 5;
-  alertsCritical = 2;
+  alertes: AlerteDetail[] = [];
+  alertesLoading = true;
+
+  get alertsTotal(): number {
+    return this.alertes.length;
+  }
+
+  get alertsCritical(): number {
+    return this.alertes.filter((a) => a.niveau === 'CRITIQUE').length;
+  }
+
+  isCritical(niveau: NiveauAlerte): boolean {
+    return niveau === 'CRITIQUE';
+  }
+
+  timeAgo(dateStr: string): string {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 1) return 'À l\'instant';
+    if (minutes < 60) return `Il y a ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Il y a ${hours} h`;
+    const days = Math.floor(hours / 24);
+    return `Il y a ${days} j`;
+  }
 
   realPath = '';
   predictedPath = '';
@@ -61,9 +75,26 @@ export class Dashboard implements OnInit {
   donutCircumference = 2 * Math.PI * this.donutRadius;
   donutDashArray = '';
 
+  constructor(private alerteService: AlerteService) {}
+
   ngOnInit(): void {
     this.buildProductionChart();
     this.donutDashArray = `${(this.occupancy.percent / 100) * this.donutCircumference} ${this.donutCircumference}`;
+    this.loadAlertes();
+  }
+
+  private loadAlertes(): void {
+    this.alertesLoading = true;
+    this.alerteService.getAlertesActives().subscribe({
+      next: (alertes) => {
+        this.alertes = alertes;
+        this.alertesLoading = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des alertes', err);
+        this.alertesLoading = false;
+      },
+    });
   }
 
   private buildProductionChart(): void {
