@@ -4,6 +4,7 @@ import { Layout } from './shared/layout/layout';
 import { Dashboard } from './features/dashboard/dashboard';
 import { Stations } from './features/stations/stations';
 import { Reservations } from './features/reservations/reservations';
+import { Alertes } from './features/alertes/alertes';
 
 export const routes: Routes = [
   {
@@ -14,6 +15,7 @@ export const routes: Routes = [
       { path: 'dashboard', component: Dashboard },
       { path: 'stations', component: Stations },
       { path: 'reservations', component: Reservations },
+      { path: 'alertes', component: Alertes },
     ],
   },
 ];

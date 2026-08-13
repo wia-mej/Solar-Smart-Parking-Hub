@@ -1,0 +1,204 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Accès & Alertes</h1>
+      <p class="subtitle">Surveillance des alertes et du journal d'accès du réseau de bornes</p>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn" [class.active]="activeTab === 'alertes'" (click)="setActiveTab('alertes')">
+      Alertes
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'acces'" (click)="setActiveTab('acces')">
+      Journal d'accès
+    </button>
+  </div>
+
+  @if (activeTab === 'alertes') {
+    <section class="stats-row">
+      <div class="stat-pill">
+        <span class="stat-pill-value">{{ totalCount }}</span>
+        <span class="stat-pill-label">Total actives</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill-value red">{{ criticalCount }}</span>
+        <span class="stat-pill-label">Critiques</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill-value orange">{{ warningCount }}</span>
+        <span class="stat-pill-label">Avertissements</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill-value teal">{{ infoCount }}</span>
+        <span class="stat-pill-label">Info</span>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          placeholder="Rechercher une station, une borne ou un message..."
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+
+      <div class="status-filters">
+        <button class="filter-chip" [class.active]="niveauFilter === 'all'" (click)="setNiveauFilter('all')">
+          Toutes
+        </button>
+        <button class="filter-chip" [class.active]="niveauFilter === 'CRITIQUE'" (click)="setNiveauFilter('CRITIQUE')">
+          Critiques
+        </button>
+        <button class="filter-chip" [class.active]="niveauFilter === 'AVERTISSEMENT'" (click)="setNiveauFilter('AVERTISSEMENT')">
+          Avertissements
+        </button>
+        <button class="filter-chip" [class.active]="niveauFilter === 'INFO'" (click)="setNiveauFilter('INFO')">
+          Info
+        </button>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="state-message">Chargement des alertes...</div>
+    } @else if (errorMessage) {
+      <div class="state-message error">
+        {{ errorMessage }}
+        <button class="retry-btn" (click)="loadAlertes()">Réessayer</button>
+      </div>
+    } @else {
+      <section class="card table-card">
+        <table class="alertes-table">
+          <thead>
+            <tr>
+              <th>Station / Borne</th>
+              <th>Type</th>
+              <th>Message</th>
+              <th>Niveau</th>
+              <th>Détectée</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (alerte of filteredAlertes; track alerte.id) {
+              <tr>
+                <td class="cell-client">
+                  <div class="station-cell">
+                    <span>{{ alerte.stationNom }}</span>
+                    <span class="borne-tag">{{ alerte.borneIdentifiant }}</span>
+                  </div>
+                </td>
+                <td class="cell-muted">{{ typeLabels[alerte.type] }}</td>
+                <td class="cell-muted">{{ alerte.message }}</td>
+                <td>
+                  <span class="status-badge" [class]="'status-' + alerte.niveau.toLowerCase()">
+                    {{ niveauLabels[alerte.niveau] }}
+                  </span>
+                </td>
+                <td class="cell-muted">{{ timeAgo(alerte.dateCreation) }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty-row">Aucune alerte ne correspond à votre recherche.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+  } @else {
+    <section class="stats-row">
+      <div class="stat-pill">
+        <span class="stat-pill-value">{{ accesTotalCount }}</span>
+        <span class="stat-pill-label">Total événements</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill-value teal">{{ accesSuccesCount }}</span>
+        <span class="stat-pill-label">Succès</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill-value red">{{ accesEchecsCount }}</span>
+        <span class="stat-pill-label">Échecs</span>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          placeholder="Rechercher un utilisateur, une station ou une borne..."
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+
+      <div class="status-filters">
+        <button class="filter-chip" [class.active]="resultatFilter === 'all'" (click)="setResultatFilter('all')">
+          Tous
+        </button>
+        <button class="filter-chip" [class.active]="resultatFilter === 'SUCCES'" (click)="setResultatFilter('SUCCES')">
+          Succès
+        </button>
+        <button class="filter-chip" [class.active]="resultatFilter === 'ECHEC'" (click)="setResultatFilter('ECHEC')">
+          Échecs
+        </button>
+      </div>
+    </div>
+
+    @if (accesLoading) {
+      <div class="state-message">Chargement du journal d'accès...</div>
+    } @else if (accesErrorMessage) {
+      <div class="state-message error">
+        {{ accesErrorMessage }}
+        <button class="retry-btn" (click)="loadAccesLogs()">Réessayer</button>
+      </div>
+    } @else {
+      <section class="card table-card">
+        <table class="alertes-table">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Station / Borne</th>
+              <th>Type</th>
+              <th>Résultat</th>
+              <th>Message</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of filteredAccesLogs; track log.id) {
+              <tr>
+                <td class="cell-client">{{ log.utilisateurNom }}</td>
+                <td class="cell-muted">
+                  <div class="station-cell">
+                    <span>{{ log.stationNom }}</span>
+                    <span class="borne-tag">{{ log.borneIdentifiant }}</span>
+                  </div>
+                </td>
+                <td class="cell-muted">{{ typeEvenementLabels[log.typeEvenement] }}</td>
+                <td>
+                  <span class="status-badge" [class]="'status-' + log.resultat.toLowerCase()">
+                    {{ resultatLabels[log.resultat] }}
+                  </span>
+                </td>
+                <td class="cell-muted">{{ log.message }}</td>
+                <td class="cell-muted">{{ timeAgo(log.timestamp) }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-row">Aucun événement ne correspond à votre recherche.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+  }
+</div>

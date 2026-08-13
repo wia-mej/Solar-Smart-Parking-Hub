@@ -16,7 +16,7 @@ export class Layout {
     { label: 'Stations & Bornes', route: '/stations', icon: 'map-pin' },
     { label: 'Réservations', route: '/reservations', icon: 'calendar' },
     { label: 'Utilisateurs', route: null, icon: 'users' },
-    { label: 'Accès & Alertes', route: null, icon: 'shield' },
+    { label: 'Accès & Alertes', route: '/alertes', icon: 'shield' },
     { label: 'Export données', route: null, icon: 'download' },
   ];
 
