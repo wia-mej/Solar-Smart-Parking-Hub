@@ -44,9 +44,16 @@
               }
             }
           </div>
-          <span class="badge" [class.badge-down]="!stat.badgeUp">
-            {{ stat.badgeUp ? '↗' : '↘' }} {{ stat.badgeText }}
-          </span>
+          <span
+                      class="badge"
+                      [class.badge-down]="!stat.badgeUp && !stat.badgeNeutral"
+                      [class.badge-neutral]="stat.badgeNeutral"
+                    >
+                      @if (!stat.badgeNeutral) {
+                        {{ stat.badgeUp ? '↗' : '↘' }}
+                      }
+                      {{ stat.badgeText }}
+                    </span>
         </div>
         <div class="stat-value">
           {{ stat.value }}

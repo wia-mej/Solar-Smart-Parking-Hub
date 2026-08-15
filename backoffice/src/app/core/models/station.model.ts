@@ -1,5 +1,5 @@
 export type StatutStation = 'ACTIVE' | 'MAINTENANCE' | 'HORS_SERVICE';
-export type StatutBorne = 'DISPONIBLE' | 'OCCUPEE' | 'HORS_SERVICE';
+export type StatutBorne = 'DISPONIBLE' | 'OCCUPEE' | 'HORS_SERVICE'| 'RESERVEE';
 export type TypeBorne = 'AC' | 'DC_RAPIDE';
 
 export interface Borne {
