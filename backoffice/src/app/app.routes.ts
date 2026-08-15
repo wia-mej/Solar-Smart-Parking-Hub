@@ -6,6 +6,7 @@ import { Stations } from './features/stations/stations';
 import { Reservations } from './features/reservations/reservations';
 import { Alertes } from './features/alertes/alertes';
 import { Utilisateurs } from './features/utilisateurs/utilisateurs';
+import { Export } from './features/export/export';
 
 export const routes: Routes = [
   {
@@ -18,6 +19,7 @@ export const routes: Routes = [
       { path: 'reservations', component: Reservations },
       { path: 'alertes', component: Alertes },
       { path: 'utilisateurs', component: Utilisateurs },
+      { path: 'export', component: Export },
     ],
   },
 ];

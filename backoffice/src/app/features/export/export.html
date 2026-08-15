@@ -1,0 +1,24 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Export données</h1>
+      <p class="subtitle">Téléchargez les données de chaque module au format CSV, compatible Excel.</p>
+    </div>
+  </div>
+
+  <div class="export-grid">
+    @for (card of cards; track card.key) {
+      <div class="export-card">
+        <h3>{{ card.label }}</h3>
+        <p class="export-description">{{ card.description }}</p>
+        <button class="export-btn" (click)="export(card)" [disabled]="card.loading">
+          @if (card.loading) {
+            Export en cours...
+          } @else {
+            Exporter en CSV
+          }
+        </button>
+      </div>
+    }
+  </div>
+</div>

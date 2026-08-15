@@ -17,7 +17,7 @@ export class Layout {
     { label: 'Réservations', route: '/reservations', icon: 'calendar' },
     { label: 'Utilisateurs', route: '/utilisateurs', icon: 'users' },
     { label: 'Accès & Alertes', route: '/alertes', icon: 'shield' },
-    { label: 'Export données', route: null, icon: 'download' },
+    { label: 'Export données', route: '/export', icon: 'download' },
   ];
 
   user = {
