@@ -6,6 +6,7 @@ import { UtilisateurService } from '../../core/services/utilisateur.service';
 import { AccesLogService } from '../../core/services/acces-log.service';
 import { AlerteService } from '../../core/services/alerte.service';
 import { ProductionEnergieService } from '../../core/services/production-energie.service';
+import { SessionChargeService } from '../../core/services/session-charge.service';
 import { exportToCsv } from '../../core/utils/csv-export';
 
 interface ExportCard {
@@ -60,6 +61,13 @@ export class Export {
       description: 'Relevés de production solaire',
       loading: false,
     },
+
+    {
+          key: 'sessions',
+          label: 'Sessions de charge',
+          description: 'Historique des sessions de recharge démarrées via l’application',
+          loading: false,
+        },
   ];
 
   constructor(
@@ -69,6 +77,7 @@ export class Export {
     private accesLogService: AccesLogService,
     private alerteService: AlerteService,
     private productionEnergieService: ProductionEnergieService,
+    private sessionChargeService: SessionChargeService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -129,6 +138,13 @@ export class Export {
       case 'production':
         this.productionEnergieService.getAllProductionEnergie().subscribe({
           next: (data) => this.finish(card, data, `production-energie-${today}.csv`),
+          error: () => this.fail(card),
+        });
+        break;
+
+      case 'sessions':
+        this.sessionChargeService.getAllSessionsCharge().subscribe({
+          next: (data) => this.finish(card, data, `sessions-${today}.csv`),
           error: () => this.fail(card),
         });
         break;

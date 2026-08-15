@@ -13,6 +13,9 @@
     <button class="tab-btn" [class.active]="activeTab === 'acces'" (click)="setActiveTab('acces')">
       Journal d'accès
     </button>
+    <button class="tab-btn" [class.active]="activeTab === 'sessions'" (click)="setActiveTab('sessions')">
+      Sessions de charge
+    </button>
   </div>
 
   @if (activeTab === 'alertes') {
@@ -110,7 +113,7 @@
         </table>
       </section>
     }
-  } @else {
+  } @else if (activeTab === 'acces') {
     <section class="stats-row">
       <div class="stat-pill">
         <span class="stat-pill-value">{{ accesTotalCount }}</span>
@@ -194,6 +197,101 @@
             } @empty {
               <tr>
                 <td colspan="6" class="empty-row">Aucun événement ne correspond à votre recherche.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+  } @else {
+    <section class="stats-row">
+      <div class="stat-pill">
+        <span class="stat-pill-value">{{ sessionsTotalCount }}</span>
+        <span class="stat-pill-label">Total sessions</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill-value teal">{{ sessionsEnCoursCount }}</span>
+        <span class="stat-pill-label">En cours</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill-value">{{ sessionsTermineesCount }}</span>
+        <span class="stat-pill-label">Terminées</span>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          placeholder="Rechercher un utilisateur, une station ou une borne..."
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+
+      <div class="status-filters">
+        <button class="filter-chip" [class.active]="statutSessionFilter === 'all'" (click)="setStatutSessionFilter('all')">
+          Toutes
+        </button>
+        <button class="filter-chip" [class.active]="statutSessionFilter === 'EN_COURS'" (click)="setStatutSessionFilter('EN_COURS')">
+          En cours
+        </button>
+        <button class="filter-chip" [class.active]="statutSessionFilter === 'TERMINEE'" (click)="setStatutSessionFilter('TERMINEE')">
+          Terminées
+        </button>
+        <button class="filter-chip" [class.active]="statutSessionFilter === 'INTERROMPUE'" (click)="setStatutSessionFilter('INTERROMPUE')">
+          Interrompues
+        </button>
+      </div>
+    </div>
+
+    @if (sessionsLoading) {
+      <div class="state-message">Chargement des sessions de charge...</div>
+    } @else if (sessionsErrorMessage) {
+      <div class="state-message error">
+        {{ sessionsErrorMessage }}
+        <button class="retry-btn" (click)="loadSessionsCharge()">Réessayer</button>
+      </div>
+    } @else {
+      <section class="card table-card">
+        <table class="alertes-table">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Station / Borne</th>
+              <th>Véhicule</th>
+              <th>Origine</th>
+              <th>Statut</th>
+              <th>Début</th>
+              <th>Énergie</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (session of filteredSessionsCharge; track session.id) {
+              <tr>
+                <td class="cell-client">{{ session.utilisateurNom }}</td>
+                <td class="cell-muted">
+                  <div class="station-cell">
+                    <span>{{ session.stationNom }}</span>
+                    <span class="borne-tag">{{ session.borneIdentifiant }}</span>
+                  </div>
+                </td>
+                <td class="cell-muted">{{ session.vehiculeImmatriculation }}</td>
+                <td class="cell-muted">{{ origineSessionLabels[session.origine] }}</td>
+                <td>
+                  <span class="status-badge" [class]="'status-' + session.statut.toLowerCase()">
+                    {{ statutSessionLabels[session.statut] }}
+                  </span>
+                </td>
+                <td class="cell-muted">{{ timeAgo(session.dateDebut) }}</td>
+                <td class="cell-muted">{{ session.energieConsommeeKwh }} kWh</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty-row">Aucune session ne correspond à votre recherche.</td>
               </tr>
             }
           </tbody>

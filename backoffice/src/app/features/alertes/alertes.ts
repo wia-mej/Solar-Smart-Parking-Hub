@@ -1,12 +1,18 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AlerteService } from '../../core/services/alerte.service';
 import { AlerteDetail, NiveauAlerte, TypeAlerte } from '../../core/models/alerte.model';
 import { AccesLogService } from '../../core/services/acces-log.service';
 import { AccesLogDetail, ResultatAcces, TypeEvenementAcces } from '../../core/models/acces-log.model';
+import { SessionChargeService } from '../../core/services/session-charge.service';
+import {
+  OrigineSession,
+  SessionChargeDetail,
+  StatutSession,
+} from '../../core/models/session-charge.model';
 
-type Tab = 'alertes' | 'acces';
+type Tab = 'alertes' | 'acces' | 'sessions';
 
 @Component({
   selector: 'app-alertes',
@@ -57,15 +63,35 @@ export class Alertes implements OnInit {
     ECHEC: 'Échec',
   };
 
+  // --- Sessions de charge ---
+  statutSessionFilter: StatutSession | 'all' = 'all';
+
+  sessionsCharge: SessionChargeDetail[] = [];
+  sessionsLoading = true;
+  sessionsErrorMessage: string | null = null;
+
+  statutSessionLabels: Record<StatutSession, string> = {
+    EN_COURS: 'En cours',
+    TERMINEE: 'Terminée',
+    INTERROMPUE: 'Interrompue',
+  };
+
+  origineSessionLabels: Record<OrigineSession, string> = {
+    RESERVEE: 'Réservée',
+    WALK_IN: 'Walk-in',
+  };
+
   constructor(
     private alerteService: AlerteService,
     private accesLogService: AccesLogService,
+    private sessionChargeService: SessionChargeService,
     private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     this.loadAlertes();
     this.loadAccesLogs();
+    this.loadSessionsCharge();
   }
 
   setActiveTab(tab: Tab): void {
@@ -177,6 +203,58 @@ export class Alertes implements OnInit {
 
   setResultatFilter(resultat: ResultatAcces | 'all'): void {
     this.resultatFilter = resultat;
+  }
+
+  // --- Sessions de charge : chargement et filtrage ---
+
+  loadSessionsCharge(): void {
+    this.sessionsLoading = true;
+    this.sessionsErrorMessage = null;
+
+    this.sessionChargeService.getAllSessionsCharge().subscribe({
+      next: (sessions) => {
+        this.sessionsCharge = sessions;
+        this.sessionsLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des sessions de charge', err);
+        this.sessionsErrorMessage =
+          'Impossible de charger les sessions de charge. Vérifiez que le backend est démarré.';
+        this.sessionsLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  get filteredSessionsCharge(): SessionChargeDetail[] {
+    return this.sessionsCharge.filter((s) => {
+      const term = this.searchTerm.toLowerCase();
+      const matchesSearch =
+        !this.searchTerm ||
+        s.stationNom.toLowerCase().includes(term) ||
+        s.borneIdentifiant.toLowerCase().includes(term) ||
+        s.utilisateurNom.toLowerCase().includes(term);
+      const matchesStatut =
+        this.statutSessionFilter === 'all' || s.statut === this.statutSessionFilter;
+      return matchesSearch && matchesStatut;
+    });
+  }
+
+  get sessionsTotalCount(): number {
+    return this.sessionsCharge.length;
+  }
+
+  get sessionsEnCoursCount(): number {
+    return this.sessionsCharge.filter((s) => s.statut === 'EN_COURS').length;
+  }
+
+  get sessionsTermineesCount(): number {
+    return this.sessionsCharge.filter((s) => s.statut === 'TERMINEE').length;
+  }
+
+  setStatutSessionFilter(statut: StatutSession | 'all'): void {
+    this.statutSessionFilter = statut;
   }
 
   // --- Partagé ---
