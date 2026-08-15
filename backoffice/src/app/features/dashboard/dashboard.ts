@@ -5,6 +5,7 @@ import { AlerteDetail, NiveauAlerte } from '../../core/models/alerte.model';
 import { StationService } from '../../core/services/station.service';
 import { Station } from '../../core/models/station.model';
 import { UtilisateurService } from '../../core/services/utilisateur.service';
+import { ProductionEnergieService } from '../../core/services/production-energie.service';
 
 interface StatCard {
   icon: 'dollar' | 'users' | 'activity' | 'zap';
@@ -120,14 +121,18 @@ export class Dashboard implements OnInit {
     private alerteService: AlerteService,
     private stationService: StationService,
     private utilisateurService: UtilisateurService,
+    private productionEnergieService: ProductionEnergieService,
     private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
+    // Graphique encore simulé volontairement : pas assez de données réelles
+    // horodatées sur aujourd'hui dans production_energie/predictions pour l'instant.
     this.buildProductionChart();
     this.loadAlertes();
     this.loadStations();
     this.loadUtilisateurs();
+    this.loadProductionEnergie();
   }
 
   private loadAlertes(): void {
@@ -191,6 +196,30 @@ export class Dashboard implements OnInit {
       },
       error: (err) => {
         console.error('Erreur lors du chargement des utilisateurs', err);
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private loadProductionEnergie(): void {
+    this.productionEnergieService.getAllProductionEnergie().subscribe({
+      next: (productions) => {
+        if (productions.length > 0) {
+          const derniere = productions.reduce((plusRecente, courante) =>
+            new Date(courante.timestamp) > new Date(plusRecente.timestamp)
+              ? courante
+              : plusRecente,
+          );
+          const energieStat = this.stats.find((s) => s.icon === 'zap');
+          if (energieStat) {
+            energieStat.value = derniere.productionKw.toFixed(1);
+            energieStat.badgeText = 'Temps réel';
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Erreur lors du chargement de la production d'énergie", err);
         this.cdr.detectChanges();
       },
     });
