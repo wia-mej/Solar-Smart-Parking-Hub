@@ -70,7 +70,8 @@ export class Stations implements OnInit {
   }
 
   bornesOccupied(station: Station): number {
-    return station.bornes.filter((b) => b.statut === 'OCCUPEE').length;
+    // une borne réservée n'est pas disponible tout de suite : elle compte comme occupée
+    return station.bornes.filter((b) => b.statut === 'OCCUPEE' || b.statut === 'RESERVEE').length;
   }
 
   bornesFree(station: Station): number {
