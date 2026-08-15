@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { StationService } from '../../core/services/station.service';
@@ -25,7 +25,10 @@ export class Stations implements OnInit {
     HORS_SERVICE: 'Hors service',
   };
 
-  constructor(private stationService: StationService) {}
+  constructor(
+    private stationService: StationService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.loadStations();
@@ -39,12 +42,14 @@ export class Stations implements OnInit {
       next: (stations) => {
         this.stations = stations;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erreur lors du chargement des stations', err);
         this.errorMessage =
           'Impossible de charger les stations. Vérifiez que le backend est démarré.';
         this.loading = false;
+        this.cdr.detectChanges();
       },
     });
   }

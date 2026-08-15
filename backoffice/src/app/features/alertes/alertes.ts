@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AlerteService } from '../../core/services/alerte.service';
@@ -60,6 +60,7 @@ export class Alertes implements OnInit {
   constructor(
     private alerteService: AlerteService,
     private accesLogService: AccesLogService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -82,12 +83,14 @@ export class Alertes implements OnInit {
       next: (alertes) => {
         this.alertes = alertes;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erreur lors du chargement des alertes', err);
         this.errorMessage =
           'Impossible de charger les alertes. Vérifiez que le backend est démarré.';
         this.loading = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -135,12 +138,14 @@ export class Alertes implements OnInit {
       next: (logs) => {
         this.accesLogs = logs;
         this.accesLoading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error("Erreur lors du chargement du journal d'accès", err);
         this.accesErrorMessage =
           "Impossible de charger le journal d'accès. Vérifiez que le backend est démarré.";
         this.accesLoading = false;
+        this.cdr.detectChanges();
       },
     });
   }

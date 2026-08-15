@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { ReservationService } from '../../core/services/reservation.service';
@@ -31,7 +31,10 @@ export class Reservations implements OnInit {
     WALK_IN: 'Walk-in',
   };
 
-  constructor(private reservationService: ReservationService) {}
+  constructor(
+    private reservationService: ReservationService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.loadReservations();
@@ -45,12 +48,14 @@ export class Reservations implements OnInit {
       next: (reservations) => {
         this.reservations = reservations;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erreur lors du chargement des réservations', err);
         this.errorMessage =
           'Impossible de charger les réservations. Vérifiez que le backend est démarré.';
         this.loading = false;
+        this.cdr.detectChanges();
       },
     });
   }

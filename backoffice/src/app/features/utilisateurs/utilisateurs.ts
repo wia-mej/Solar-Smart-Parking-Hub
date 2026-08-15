@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { UtilisateurService } from '../../core/services/utilisateur.service';
@@ -24,7 +24,10 @@ export class Utilisateurs implements OnInit {
     ADMIN: 'Admin',
   };
 
-  constructor(private utilisateurService: UtilisateurService) {}
+  constructor(
+    private utilisateurService: UtilisateurService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.loadUtilisateurs();
@@ -38,12 +41,14 @@ export class Utilisateurs implements OnInit {
       next: (utilisateurs) => {
         this.utilisateurs = utilisateurs;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erreur lors du chargement des utilisateurs', err);
         this.errorMessage =
           'Impossible de charger les utilisateurs. Vérifiez que le backend est démarré.';
         this.loading = false;
+        this.cdr.detectChanges();
       },
     });
   }
