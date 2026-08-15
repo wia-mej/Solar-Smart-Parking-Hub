@@ -20,3 +20,20 @@ export interface Station {
   statut: StatutStation;
   bornes: Borne[];
 }
+
+export interface NewBorneRequest {
+  identifiant: string;
+  type: TypeBorne;
+  puissanceKw: number;
+}
+
+export interface NewStationRequest {
+  nom: string;
+  adresse: string;
+  ville: string;
+  latitude: number;
+  longitude: number;
+  puissanceSolaireInstalleeKw: number;
+  statut: StatutStation;
+  bornes: NewBorneRequest[];
+}
