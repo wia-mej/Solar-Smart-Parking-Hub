@@ -13,3 +13,15 @@ export interface UtilisateurDetail {
   abonnementActif: boolean;
   nombreVehicules: number;
 }
+
+export interface NewAdminRequest {
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+}
+
+export interface AdminCree {
+  utilisateur: UtilisateurDetail;
+  lienDefinitionMotDePasse: string;
+}

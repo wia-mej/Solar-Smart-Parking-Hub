@@ -2,7 +2,12 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { UtilisateurService } from '../../core/services/utilisateur.service';
-import { RoleUtilisateur, UtilisateurDetail } from '../../core/models/utilisateur.model';
+import {
+  AdminCree,
+  NewAdminRequest,
+  RoleUtilisateur,
+  UtilisateurDetail,
+} from '../../core/models/utilisateur.model';
 
 @Component({
   selector: 'app-utilisateurs',
@@ -23,6 +28,14 @@ export class Utilisateurs implements OnInit {
     CONDUCTEUR: 'Conducteur',
     ADMIN: 'Admin',
   };
+
+  // --- Ajout d'un administrateur ---
+  showModal = false;
+  submitting = false;
+  formError: string | null = null;
+  newAdminForm: NewAdminRequest = this.emptyForm();
+  adminCree: AdminCree | null = null;
+  linkCopied = false;
 
   constructor(
     private utilisateurService: UtilisateurService,
@@ -107,6 +120,61 @@ export class Utilisateurs implements OnInit {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
+    });
+  }
+
+  private emptyForm(): NewAdminRequest {
+    return { nom: '', prenom: '', email: '', telephone: '' };
+  }
+
+  openModal(): void {
+    this.newAdminForm = this.emptyForm();
+    this.formError = null;
+    this.adminCree = null;
+    this.linkCopied = false;
+    this.showModal = true;
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    if (this.adminCree) {
+      this.loadUtilisateurs();
+    }
+  }
+
+  submitAdmin(): void {
+    if (!this.newAdminForm.nom || !this.newAdminForm.prenom || !this.newAdminForm.email) {
+      this.formError = 'Nom, prénom et email sont obligatoires.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.submitting = true;
+    this.formError = null;
+
+    this.utilisateurService.creerAdministrateur(this.newAdminForm).subscribe({
+      next: (resultat) => {
+        this.adminCree = resultat;
+        this.submitting = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Erreur lors de la création de l'administrateur", err);
+        this.formError =
+          err.status === 409
+            ? 'Un compte existe déjà avec cet email.'
+            : "Impossible de créer l'administrateur. Vérifiez que le backend est démarré.";
+        this.submitting = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  copyLink(): void {
+    if (!this.adminCree) return;
+    navigator.clipboard.writeText(this.adminCree.lienDefinitionMotDePasse).then(() => {
+      this.linkCopied = true;
+      this.cdr.detectChanges();
     });
   }
 }

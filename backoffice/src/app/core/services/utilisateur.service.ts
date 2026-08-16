@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { UtilisateurDetail } from '../models/utilisateur.model';
-
+import { NewAdminRequest, AdminCree } from '../models/utilisateur.model';
 @Injectable({
   providedIn: 'root',
 })
@@ -18,5 +18,9 @@ export class UtilisateurService {
 
   getUtilisateursPremium(): Observable<UtilisateurDetail[]> {
     return this.http.get<UtilisateurDetail[]>(`${this.baseUrl}/premium`);
+  }
+
+  creerAdministrateur(admin: NewAdminRequest): Observable<AdminCree> {
+    return this.http.post<AdminCree>(`${this.baseUrl}/admin`, admin);
   }
 }

@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-layout',
@@ -9,6 +11,9 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './layout.scss',
 })
 export class Layout {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   todayEnergyMwh = 0.6;
 
   navItems = [
@@ -20,9 +25,17 @@ export class Layout {
     { label: 'Export données', route: '/export', icon: 'download' },
   ];
 
-  user = {
-    initials: 'WJ',
-    name: 'Wiame Jaoui',
-    role: 'Admin',
-  };
+  get userEmail(): string {
+    return this.authService.currentUser()?.email ?? '';
+  }
+
+  get userInitials(): string {
+    return this.userEmail ? this.userEmail.substring(0, 2).toUpperCase() : '??';
+  }
+
+  logout(): void {
+    this.authService.logout().then(() => {
+      this.router.navigate(['/login']);
+    });
+  }
 }

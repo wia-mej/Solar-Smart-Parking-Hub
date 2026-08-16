@@ -6,6 +6,7 @@
         {{ totalCount }} utilisateur{{ totalCount > 1 ? 's' : '' }} — gestion des comptes conducteurs
       </p>
     </div>
+    <button class="btn-primary" (click)="openModal()">Ajouter un administrateur</button>
   </header>
 
   <section class="stats-row">
@@ -104,5 +105,72 @@
         </tbody>
       </table>
     </section>
+  }
+  @if (showModal) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        @if (!adminCree) {
+          <div class="modal-header">
+            <h2>Ajouter un administrateur</h2>
+          </div>
+          <div class="modal-body">
+            <div class="form-grid">
+              <label>
+                Prénom
+                <input type="text" [(ngModel)]="newAdminForm.prenom" name="prenom" />
+              </label>
+              <label>
+                Nom
+                <input type="text" [(ngModel)]="newAdminForm.nom" name="nom" />
+              </label>
+              <label>
+                Email
+                <input type="email" [(ngModel)]="newAdminForm.email" name="email" />
+              </label>
+              <label>
+                Téléphone (optionnel)
+                <input type="text" [(ngModel)]="newAdminForm.telephone" name="telephone" />
+              </label>
+            </div>
+            @if (formError) {
+              <p class="form-error">{{ formError }}</p>
+            }
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeModal()">Annuler</button>
+            <button class="btn-primary" [disabled]="submitting" (click)="submitAdmin()">
+              @if (submitting) {
+                Création...
+              } @else {
+                Créer le compte
+              }
+            </button>
+          </div>
+        } @else {
+          <div class="modal-header">
+            <h2>Administrateur créé</h2>
+          </div>
+          <div class="modal-body">
+            <p>
+              Le compte de <strong>{{ adminCree.utilisateur.prenom }} {{ adminCree.utilisateur.nom }}</strong>
+              a été créé. Transmets-lui ce lien pour qu'il/elle définisse son mot de passe :
+            </p>
+            <div class="reset-link-box">
+              <code>{{ adminCree.lienDefinitionMotDePasse }}</code>
+            </div>
+            <button class="btn-secondary" (click)="copyLink()">
+              @if (linkCopied) {
+                Copié !
+              } @else {
+                Copier le lien
+              }
+            </button>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-primary" (click)="closeModal()">Terminer</button>
+          </div>
+        }
+      </div>
+    </div>
   }
 </div>
