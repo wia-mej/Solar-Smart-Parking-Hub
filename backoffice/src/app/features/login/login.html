@@ -1,0 +1,29 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+        <img src="assets/nalida-icon.png" alt="Nalida Power" class="login-icon" />
+        <span class="login-title">ParkRee</span>
+        <span class="login-subtitle">Nalida Power · Backoffice</span>
+</div>
+
+    <form (ngSubmit)="submit()">
+      <label for="email">Email</label>
+      <input id="email" type="email" name="email" [(ngModel)]="email" required autocomplete="username" />
+
+      <label for="password">Mot de passe</label>
+      <input id="password" type="password" name="password" [(ngModel)]="password" required autocomplete="current-password" />
+
+      @if (errorMessage) {
+        <p class="login-error">{{ errorMessage }}</p>
+      }
+
+      <button type="submit" [disabled]="loading">
+        @if (loading) {
+          Connexion...
+        } @else {
+          Se connecter
+        }
+      </button>
+    </form>
+  </div>
+</div>

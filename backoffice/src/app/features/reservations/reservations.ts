@@ -1,20 +1,8 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-type StatutReservation = 'CONFIRMEE' | 'EN_ATTENTE' | 'ANNULEE' | 'TERMINEE';
-type OrigineReservation = 'RESERVEE' | 'WALK_IN';
-
-interface Reservation {
-  id: string;
-  client: string;
-  station: string;
-  borne: string;
-  date: string;
-  heureDebut: string;
-  heureFin: string;
-  statut: StatutReservation;
-  origine: OrigineReservation;
-}
+import { ReservationService } from '../../core/services/reservation.service';
+import { ReservationDetail, StatutReservation } from '../../core/models/reservation.model';
 
 @Component({
   selector: 'app-reservations',
@@ -23,93 +11,70 @@ interface Reservation {
   templateUrl: './reservations.html',
   styleUrl: './reservations.scss',
 })
-export class Reservations {
+export class Reservations implements OnInit {
   searchTerm = '';
   statusFilter: StatutReservation | 'all' = 'all';
 
+  reservations: ReservationDetail[] = [];
+  loading = true;
+  errorMessage: string | null = null;
+
   statusLabels: Record<StatutReservation, string> = {
-    CONFIRMEE: 'Confirmée',
     EN_ATTENTE: 'En attente',
+    CONFIRMEE: 'Confirmée',
     ANNULEE: 'Annulée',
     TERMINEE: 'Terminée',
   };
 
-  origineLabels: Record<OrigineReservation, string> = {
+  origineLabels: Record<string, string> = {
     RESERVEE: 'Réservée',
     WALK_IN: 'Walk-in',
   };
 
-  reservations: Reservation[] = [
-    {
-      id: 'r1',
-      client: 'Yassine El Amrani',
-      station: 'Station Casablanca Centre',
-      borne: 'B1',
-      date: '2026-08-05',
-      heureDebut: '09:00',
-      heureFin: '10:30',
-      statut: 'CONFIRMEE',
-      origine: 'RESERVEE',
-    },
-    {
-      id: 'r2',
-      client: 'Sara Bennani',
-      station: 'Station Rabat Agdal',
-      borne: 'B3',
-      date: '2026-08-05',
-      heureDebut: '11:00',
-      heureFin: '12:00',
-      statut: 'EN_ATTENTE',
-      origine: 'RESERVEE',
-    },
-    {
-      id: 'r3',
-      client: 'Karim Ouazzani',
-      station: 'Station Casablanca Centre',
-      borne: 'B2',
-      date: '2026-08-04',
-      heureDebut: '14:00',
-      heureFin: '15:00',
-      statut: 'TERMINEE',
-      origine: 'WALK_IN',
-    },
-    {
-      id: 'r4',
-      client: 'Amina Tazi',
-      station: 'Station Marrakech Guéliz',
-      borne: 'B1',
-      date: '2026-08-04',
-      heureDebut: '16:30',
-      heureFin: '17:30',
-      statut: 'ANNULEE',
-      origine: 'RESERVEE',
-    },
-    {
-      id: 'r5',
-      client: 'Omar Fassi',
-      station: 'Station Rabat Agdal',
-      borne: 'B2',
-      date: '2026-08-06',
-      heureDebut: '08:00',
-      heureFin: '09:00',
-      statut: 'CONFIRMEE',
-      origine: 'WALK_IN',
-    },
-  ];
+  constructor(
+    private reservationService: ReservationService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
-  get filteredReservations(): Reservation[] {
+  ngOnInit(): void {
+    this.loadReservations();
+  }
+
+  loadReservations(): void {
+    this.loading = true;
+    this.errorMessage = null;
+
+    this.reservationService.getAllReservations().subscribe({
+      next: (reservations) => {
+        this.reservations = reservations;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des réservations', err);
+        this.errorMessage =
+          'Impossible de charger les réservations. Vérifiez que le backend est démarré.';
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  get filteredReservations(): ReservationDetail[] {
     return this.reservations.filter((r) => {
       const matchesSearch =
         !this.searchTerm ||
-        r.client.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        r.station.toLowerCase().includes(this.searchTerm.toLowerCase());
+        r.clientNom.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        r.stationNom.toLowerCase().includes(this.searchTerm.toLowerCase());
       const matchesStatus = this.statusFilter === 'all' || r.statut === this.statusFilter;
       return matchesSearch && matchesStatus;
     });
   }
 
   get todayCount(): number {
-    return this.reservations.filter((r) => r.date === '2026-08-05').length;
+    const today = new Date().toDateString();
+    return this.reservations.filter((r) => new Date(r.dateDebut).toDateString() === today)
+      .length;
   }
 
   get confirmedCount(): number {
@@ -131,5 +96,10 @@ export class Reservations {
   formatDate(dateStr: string): string {
     const date = new Date(dateStr);
     return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+  }
+
+  formatTime(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   }
 }

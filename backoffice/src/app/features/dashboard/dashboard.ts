@@ -1,4 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+
+import { AlerteService } from '../../core/services/alerte.service';
+import { AlerteDetail, NiveauAlerte } from '../../core/models/alerte.model';
+import { StationService } from '../../core/services/station.service';
+import { Station } from '../../core/models/station.model';
+import { UtilisateurService } from '../../core/services/utilisateur.service';
+import { ProductionEnergieService } from '../../core/services/production-energie.service';
 
 interface StatCard {
   icon: 'dollar' | 'users' | 'activity' | 'zap';
@@ -8,13 +15,7 @@ interface StatCard {
   label: string;
   badgeText: string;
   badgeUp: boolean;
-}
-
-interface AlertItem {
-  label: string;
-  detail: string;
-  time: string;
-  severity: 'critical' | 'warning';
+  badgeNeutral?: boolean; // true = badge informatif, pas de flèche de tendance
 }
 
 @Component({
@@ -28,27 +29,82 @@ export class Dashboard implements OnInit {
   lastUpdatedSeconds = 5;
 
   stats: StatCard[] = [
-    { icon: 'dollar', iconBg: 'teal', value: '152 979', unit: 'DH', label: 'Revenus mensuels', badgeText: '+12.4%', badgeUp: true },
-    { icon: 'users', iconBg: 'teal', value: '1 892', label: 'Abonnés actifs', badgeText: '+38 ce mois', badgeUp: true },
-    { icon: 'activity', iconBg: 'orange', value: '5', unit: '%', label: 'Taux d\'occupation', badgeText: '+4.1 pts', badgeUp: true },
-    { icon: 'zap', iconBg: 'teal', value: '16.9', unit: 'kW', label: 'Énergie produite', badgeText: '-2.3% vs prédit', badgeUp: false },
+    {
+      icon: 'dollar',
+      iconBg: 'teal',
+      value: '—',
+      unit: 'DH',
+      label: 'Revenus mensuels',
+      badgeText: 'Tarifs à définir',
+      badgeUp: true,
+      badgeNeutral: true,
+    },
+    {
+      icon: 'users',
+      iconBg: 'teal',
+      value: '—',
+      label: 'Abonnés actifs',
+      badgeText: 'Temps réel',
+      badgeUp: true,
+      badgeNeutral: true,
+    },
+    {
+      icon: 'activity',
+      iconBg: 'orange',
+      value: '—',
+      unit: '%',
+      label: "Taux d'occupation",
+      badgeText: 'Temps réel',
+      badgeUp: true,
+      badgeNeutral: true,
+    },
+    {
+      icon: 'zap',
+      iconBg: 'teal',
+      value: '—',
+      unit: 'kW',
+      label: 'Énergie produite',
+      badgeText: 'Bientôt disponible',
+      badgeUp: true,
+      badgeNeutral: true,
+    },
   ];
 
   occupancy = {
-    occupied: 1,
-    free: 21,
+    occupied: 0,
+    free: 0,
     broken: 0,
-    total: 22,
-    percent: 5,
+    total: 0,
+    percent: 0,
   };
 
-  alerts: AlertItem[] = [
-    { label: 'Borne #12 — Casablanca Centre', detail: 'Hors ligne depuis 40 min', time: 'Il y a 40 min', severity: 'critical' },
-    { label: 'Onduleur RZ2', detail: 'Rendement anormalement bas', time: 'Il y a 1 h', severity: 'critical' },
-    { label: 'Capteur météo — Rabat Agdal', detail: 'Données manquantes', time: 'Il y a 2 h', severity: 'warning' },
-  ];
-  alertsTotal = 5;
-  alertsCritical = 2;
+  stations: Station[] = [];
+
+  alertes: AlerteDetail[] = [];
+  alertesLoading = true;
+
+  get alertsTotal(): number {
+    return this.alertes.length;
+  }
+
+  get alertsCritical(): number {
+    return this.alertes.filter((a) => a.niveau === 'CRITIQUE').length;
+  }
+
+  isCritical(niveau: NiveauAlerte): boolean {
+    return niveau === 'CRITIQUE';
+  }
+
+  timeAgo(dateStr: string): string {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 1) return "À l'instant";
+    if (minutes < 60) return `Il y a ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Il y a ${hours} h`;
+    const days = Math.floor(hours / 24);
+    return `Il y a ${days} j`;
+  }
 
   realPath = '';
   predictedPath = '';
@@ -59,11 +115,114 @@ export class Dashboard implements OnInit {
 
   donutRadius = 70;
   donutCircumference = 2 * Math.PI * this.donutRadius;
-  donutDashArray = '';
+  donutDashArray = '0 ' + this.donutCircumference;
+
+  constructor(
+    private alerteService: AlerteService,
+    private stationService: StationService,
+    private utilisateurService: UtilisateurService,
+    private productionEnergieService: ProductionEnergieService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
+    // Graphique encore simulé volontairement : pas assez de données réelles
+    // horodatées sur aujourd'hui dans production_energie/predictions pour l'instant.
     this.buildProductionChart();
-    this.donutDashArray = `${(this.occupancy.percent / 100) * this.donutCircumference} ${this.donutCircumference}`;
+    this.loadAlertes();
+    this.loadStations();
+    this.loadUtilisateurs();
+    this.loadProductionEnergie();
+  }
+
+  private loadAlertes(): void {
+    this.alertesLoading = true;
+    this.alerteService.getAlertesActives().subscribe({
+      next: (alertes) => {
+        this.alertes = alertes;
+        this.alertesLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des alertes', err);
+        this.alertesLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private loadStations(): void {
+    this.stationService.getAllStations().subscribe({
+      next: (stations) => {
+        this.stations = stations;
+        this.computeOccupancy();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des stations', err);
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private computeOccupancy(): void {
+    const bornes = this.stations.flatMap((s) => s.bornes);
+    const total = bornes.length;
+    const occupied = bornes.filter(
+      (b) => b.statut === 'OCCUPEE' || b.statut === 'RESERVEE',
+    ).length;
+    const free = bornes.filter((b) => b.statut === 'DISPONIBLE').length;
+    const broken = bornes.filter((b) => b.statut === 'HORS_SERVICE').length;
+    const percent = total > 0 ? Math.round((occupied / total) * 100) : 0;
+
+    this.occupancy = { occupied, free, broken, total, percent };
+    this.donutDashArray = `${(percent / 100) * this.donutCircumference} ${this.donutCircumference}`;
+
+    const occupationStat = this.stats.find((s) => s.icon === 'activity');
+    if (occupationStat) {
+      occupationStat.value = String(percent);
+    }
+  }
+
+  private loadUtilisateurs(): void {
+    this.utilisateurService.getAllUtilisateurs().subscribe({
+      next: (utilisateurs) => {
+        const actifs = utilisateurs.filter((u) => u.abonnementActif).length;
+        const usersStat = this.stats.find((s) => s.icon === 'users');
+        if (usersStat) {
+          usersStat.value = String(actifs);
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des utilisateurs', err);
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private loadProductionEnergie(): void {
+    this.productionEnergieService.getAllProductionEnergie().subscribe({
+      next: (productions) => {
+        if (productions.length > 0) {
+          const derniere = productions.reduce((plusRecente, courante) =>
+            new Date(courante.timestamp) > new Date(plusRecente.timestamp)
+              ? courante
+              : plusRecente,
+          );
+          const energieStat = this.stats.find((s) => s.icon === 'zap');
+          if (energieStat) {
+            energieStat.value = derniere.productionKw.toFixed(1);
+            energieStat.badgeText = 'Temps réel';
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Erreur lors du chargement de la production d'énergie", err);
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   private buildProductionChart(): void {
@@ -74,7 +233,7 @@ export class Dashboard implements OnInit {
       Math.max(0, max * Math.exp(-Math.pow(h - peak, 2) / (2 * sigma * sigma)));
 
     const real = hours.map((h) => gaussian(h, 13, 3.4, 95));
-    const predicted = hours.map((h) => gaussian(h, 13, 3.6, 92) + (Math.sin(h) * 1.5));
+    const predicted = hours.map((h) => gaussian(h, 13, 3.6, 92) + Math.sin(h) * 1.5);
 
     const maxValue = Math.max(...real, ...predicted) * 1.1;
     const stepX = this.chartWidth / (hours.length - 1);

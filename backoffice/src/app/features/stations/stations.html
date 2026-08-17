@@ -6,7 +6,7 @@
         {{ stations.length }} station{{ stations.length > 1 ? 's' : '' }} — gestion des hubs de recharge solaire
       </p>
     </div>
-    <button class="btn-primary">
+    <button class="btn-primary" (click)="openModal()">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="5" x2="12" y2="19"></line>
         <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -114,3 +114,86 @@
     </section>
   }
 </div>
+
+@if (showModal) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Nouvelle station</h2>
+        <button class="modal-close" (click)="closeModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        @if (formError) {
+          <div class="form-error">{{ formError }}</div>
+        }
+
+        <div class="form-grid">
+          <label>
+            Nom
+            <input type="text" [(ngModel)]="newStationForm.nom" />
+          </label>
+          <label>
+            Ville
+            <input type="text" [(ngModel)]="newStationForm.ville" />
+          </label>
+          <label class="span-2">
+            Adresse
+            <input type="text" [(ngModel)]="newStationForm.adresse" />
+          </label>
+          <label>
+            Latitude
+            <input type="number" [(ngModel)]="newStationForm.latitude" />
+          </label>
+          <label>
+            Longitude
+            <input type="number" [(ngModel)]="newStationForm.longitude" />
+          </label>
+          <label>
+            Puissance solaire installée (kW)
+            <input type="number" [(ngModel)]="newStationForm.puissanceSolaireInstalleeKw" />
+          </label>
+          <label>
+            Statut
+            <select [(ngModel)]="newStationForm.statut">
+              <option value="ACTIVE">Active</option>
+              <option value="MAINTENANCE">Maintenance</option>
+              <option value="HORS_SERVICE">Hors service</option>
+            </select>
+          </label>
+        </div>
+
+        <h3>Bornes</h3>
+        @for (borne of newStationForm.bornes; track $index) {
+          <div class="borne-row">
+            <input type="text" placeholder="Identifiant (ex: B1)" [(ngModel)]="borne.identifiant" />
+            <select [(ngModel)]="borne.type">
+              <option value="AC">AC</option>
+              <option value="DC_RAPIDE">DC rapide</option>
+            </select>
+            <input type="number" placeholder="Puissance (kW)" [(ngModel)]="borne.puissanceKw" />
+            <button
+              class="remove-borne-btn"
+              (click)="removeBorneRow($index)"
+              [disabled]="newStationForm.bornes.length === 1"
+            >
+              &times;
+            </button>
+          </div>
+        }
+        <button class="add-borne-btn" (click)="addBorneRow()">+ Ajouter une borne</button>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModal()">Annuler</button>
+        <button class="btn-primary" (click)="submitStation()" [disabled]="submitting">
+          @if (submitting) {
+            Création en cours...
+          } @else {
+            Créer la station
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

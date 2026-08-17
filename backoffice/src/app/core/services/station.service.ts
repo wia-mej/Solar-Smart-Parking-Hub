@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { Station } from '../models/station.model';
+import { NewStationRequest, Station } from '../models/station.model';
 
 @Injectable({
   providedIn: 'root',
@@ -18,5 +18,9 @@ export class StationService {
 
   getStationById(id: string): Observable<Station> {
     return this.http.get<Station>(`${this.baseUrl}/${id}`);
+  }
+
+  createStation(station: NewStationRequest): Observable<Station> {
+    return this.http.post<Station>(this.baseUrl, station);
   }
 }

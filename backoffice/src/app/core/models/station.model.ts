@@ -1,5 +1,5 @@
 export type StatutStation = 'ACTIVE' | 'MAINTENANCE' | 'HORS_SERVICE';
-export type StatutBorne = 'DISPONIBLE' | 'OCCUPEE' | 'HORS_SERVICE';
+export type StatutBorne = 'DISPONIBLE' | 'OCCUPEE' | 'HORS_SERVICE'| 'RESERVEE';
 export type TypeBorne = 'AC' | 'DC_RAPIDE';
 
 export interface Borne {
@@ -19,4 +19,21 @@ export interface Station {
   puissanceSolaireInstalleeKw: number;
   statut: StatutStation;
   bornes: Borne[];
+}
+
+export interface NewBorneRequest {
+  identifiant: string;
+  type: TypeBorne;
+  puissanceKw: number;
+}
+
+export interface NewStationRequest {
+  nom: string;
+  adresse: string;
+  ville: string;
+  latitude: number;
+  longitude: number;
+  puissanceSolaireInstalleeKw: number;
+  statut: StatutStation;
+  bornes: NewBorneRequest[];
 }
