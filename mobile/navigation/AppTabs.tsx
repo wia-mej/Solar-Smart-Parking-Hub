@@ -3,20 +3,12 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../core/theme';
-import StationsScreen from '../features/stations/StationsScreen';
+import StationsStack from './StationsStack';
 import ProfilScreen from '../features/profil/ProfilScreen';
 import PlaceholderScreen from '../shared/PlaceholderScreen';
-
+import ReservationsScreen from '../features/reservations/ReservationsScreen';
 const Tab = createBottomTabNavigator();
 
-function ReservationsScreen() {
-  return (
-    <PlaceholderScreen
-      title="Réservations"
-      message="Tes réservations de bornes apparaîtront ici."
-    />
-  );
-}
 
 function ChargeScreen() {
   return (
@@ -49,7 +41,7 @@ export default function AppTabs() {
       >
         <Tab.Screen
           name="Stations"
-          component={StationsScreen}
+          component={StationsStack}
           options={{
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="location-outline" color={color} size={size} />

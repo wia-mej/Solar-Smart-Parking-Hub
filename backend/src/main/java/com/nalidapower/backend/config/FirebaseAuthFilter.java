@@ -104,6 +104,12 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
             return true;
         }
 
+        // La liste complète des réservations est une vue backoffice ;
+        // un conducteur passe par /mes-reservations, qui ne renvoie que les siennes
+        if ("/api/v1/reservations".equals(uri) && "GET".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
         // Les stations sont consultables par tous, mais seul le backoffice peut les modifier
         return uri.startsWith("/api/v1/stations") && !"GET".equalsIgnoreCase(request.getMethod());
     }

@@ -1,19 +1,27 @@
-import { useEffect, useState, useMemo } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { useState, useMemo, useCallback } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { getAllStations } from '../../core/services/station.service';
 import type { Station } from '../../core/models/station.model';
+import type { StationsStackParamList } from '../../navigation/StationsStack';
 import { colors, spacing, radius, typography } from '../../core/theme';
 import Screen from '../../shared/Screen';
 import AppInput from '../../shared/AppInput';
 
+type Nav = NativeStackNavigationProp<StationsStackParamList>;
+
 export default function StationsScreen() {
+  const navigation = useNavigation<Nav>();
+
   const [stations, setStations] = useState<Station[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setError(null);
     try {
       setStations(await getAllStations());
@@ -23,11 +31,15 @@ export default function StationsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    load();
   }, []);
+
+  // Recharge à chaque fois que l'écran redevient visible : au retour du détail,
+  // une borne vient peut-être d'être réservée et les compteurs ont changé.
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -84,7 +96,11 @@ export default function StationsScreen() {
           const dispo = item.bornes.filter((b) => b.statut === 'DISPONIBLE').length;
           const complet = dispo === 0;
           return (
-            <View style={styles.card}>
+            <TouchableOpacity
+              style={styles.card}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('StationDetail', { station: item })}
+            >
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle}>{item.nom}</Text>
                 <View style={[styles.dot, complet && styles.dotFull]} />
@@ -92,13 +108,16 @@ export default function StationsScreen() {
               <Text style={styles.cardCity}>{item.ville}</Text>
               <Text style={styles.cardAddress}>{item.adresse}</Text>
 
-              <View style={[styles.badge, complet && styles.badgeFull]}>
-                <Text style={[styles.badgeText, complet && styles.badgeTextFull]}>
-                  {dispo} borne{dispo > 1 ? 's' : ''} libre{dispo > 1 ? 's' : ''} sur{' '}
-                  {item.bornes.length}
-                </Text>
+              <View style={styles.cardFooter}>
+                <View style={[styles.badge, complet && styles.badgeFull]}>
+                  <Text style={[styles.badgeText, complet && styles.badgeTextFull]}>
+                    {dispo} borne{dispo > 1 ? 's' : ''} libre{dispo > 1 ? 's' : ''} sur{' '}
+                    {item.bornes.length}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </View>
-            </View>
+            </TouchableOpacity>
           );
         }}
       />
@@ -124,9 +143,13 @@ const styles = StyleSheet.create({
   dotFull: { backgroundColor: colors.danger },
   cardCity: { color: colors.primaryDark, fontWeight: '500', marginTop: 2 },
   cardAddress: { ...typography.small, marginTop: spacing.xs },
-  badge: {
-    alignSelf: 'flex-start',
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: spacing.md,
+  },
+  badge: {
     backgroundColor: colors.primarySoft,
     paddingVertical: 6,
     paddingHorizontal: spacing.sm + 2,
