@@ -5,7 +5,11 @@ import {
   type User,
 } from 'firebase/auth';
 import { auth } from '../firebase-config';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
+export function register(email: string, password: string): Promise<User> {
+  return createUserWithEmailAndPassword(auth, email, password).then((c) => c.user);
+}
 export function login(email: string, password: string): Promise<User> {
   return signInWithEmailAndPassword(auth, email, password).then((c) => c.user);
 }

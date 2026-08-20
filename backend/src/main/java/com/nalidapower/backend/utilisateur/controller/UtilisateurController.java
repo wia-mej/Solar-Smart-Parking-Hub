@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.nalidapower.backend.utilisateur.dto.InscriptionConducteurRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -96,6 +98,34 @@ public class UtilisateurController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new AdminCreeDTO(toDetailDTO(utilisateurEnregistre), lienDefinitionMotDePasse));
+    }
+
+        @PostMapping("/inscription")
+    public ResponseEntity<?> inscrireConducteur(@RequestBody InscriptionConducteurRequest requete,
+                                                HttpServletRequest httpRequest) {
+
+        String firebaseUid = (String) httpRequest.getAttribute("firebaseUid");
+        String email = (String) httpRequest.getAttribute("firebaseEmail");
+
+        if (firebaseUid == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Jeton Firebase manquant");
+        }
+
+        if (utilisateurRepository.findByFirebaseUid(firebaseUid).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Ce compte est déjà inscrit");
+        }
+
+        Utilisateur utilisateur = new Utilisateur();
+        utilisateur.setNom(requete.getNom());
+        utilisateur.setPrenom(requete.getPrenom());
+        utilisateur.setEmail(email);
+        utilisateur.setTelephone(requete.getTelephone());
+        utilisateur.setRole(RoleUtilisateur.CONDUCTEUR);
+        utilisateur.setFirebaseUid(firebaseUid);
+        utilisateur.setDateCreation(LocalDateTime.now());
+
+        Utilisateur enregistre = utilisateurRepository.save(utilisateur);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDetailDTO(enregistre));
     }
 
     private String genererMotDePasseAleatoireJetable() {

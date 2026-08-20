@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# adresse du backend, propre à chaque poste
+.env

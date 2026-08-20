@@ -13,15 +13,34 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 @Component
 public class FirebaseAuthFilter extends OncePerRequestFilter {
 
+    /** Domaines réservés au backoffice : un conducteur n'a rien à y faire. */
+    private static final List<String> PREFIXES_ADMIN = List.of(
+            "/api/v1/utilisateurs",
+            "/api/v1/alertes",
+            "/api/v1/acces-logs",
+            "/api/v1/production-energie",
+            "/api/v1/predictions"
+    );
+
+        /** Seule route où le jeton est valide alors que l'utilisateur métier n'existe pas encore. */
+    private static final String ROUTE_INSCRIPTION = "/api/v1/utilisateurs/inscription";
+
     private final UtilisateurRepository utilisateurRepository;
 
     public FirebaseAuthFilter(UtilisateurRepository utilisateurRepository) {
         this.utilisateurRepository = utilisateurRepository;
+    }
+
+    /** Les endpoints de supervision sont interrogés par Prometheus, qui n'a pas de jeton. */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getRequestURI().startsWith("/actuator");
     }
 
     @Override
@@ -44,18 +63,48 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
 
         try {
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
+                        // Inscription d'un conducteur : le compte Firebase vient d'être créé côté app,
+            // l'utilisateur métier n'existe pas encore — c'est justement l'objet de la requête.
+            if (ROUTE_INSCRIPTION.equals(request.getRequestURI())) {
+                request.setAttribute("firebaseUid", decodedToken.getUid());
+                request.setAttribute("firebaseEmail", decodedToken.getEmail());
+                filterChain.doFilter(request, response);
+                return;
+            }
             Optional<Utilisateur> utilisateurOpt =
                     utilisateurRepository.findByFirebaseUid(decodedToken.getUid());
 
-            if (utilisateurOpt.isEmpty() || utilisateurOpt.get().getRole() != RoleUtilisateur.ADMIN) {
+            // Le jeton est valide, mais aucun utilisateur métier ne lui correspond
+            if (utilisateurOpt.isEmpty()) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Compte inconnu");
+                return;
+            }
+
+            Utilisateur utilisateur = utilisateurOpt.get();
+
+            if (estReserveAdmin(request) && utilisateur.getRole() != RoleUtilisateur.ADMIN) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Accès réservé aux administrateurs");
                 return;
             }
+
+            // Mis à disposition des contrôleurs, pour identifier l'auteur de la requête
+            request.setAttribute("utilisateur", utilisateur);
 
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token invalide");
         }
+    }
+
+    private boolean estReserveAdmin(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+
+        if (PREFIXES_ADMIN.stream().anyMatch(uri::startsWith)) {
+            return true;
+        }
+
+        // Les stations sont consultables par tous, mais seul le backoffice peut les modifier
+        return uri.startsWith("/api/v1/stations") && !"GET".equalsIgnoreCase(request.getMethod());
     }
 }

@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { login } from '../../core/services/auth.service';
 
-export default function LoginScreen() {
-  const [email, setEmail] = useState('');
+export default function LoginScreen({ onGoToSignup }: { onGoToSignup: () => void }) {  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +44,9 @@ export default function LoginScreen() {
       <TouchableOpacity style={styles.button} onPress={submit} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Se connecter</Text>}
       </TouchableOpacity>
+        <TouchableOpacity onPress={onGoToSignup} style={styles.link}>
+             <Text style={styles.linkText}>Créer un compte conducteur</Text>
+        </TouchableOpacity>
     </View>
   );
 }
@@ -62,4 +64,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#002860', borderRadius: 8, padding: 16, alignItems: 'center',
   },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+    link: { marginTop: 18, alignItems: 'center' },
+  linkText: { color: '#0098c0', fontWeight: '600' },
 });
+
