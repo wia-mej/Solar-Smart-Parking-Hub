@@ -13,6 +13,7 @@ charging point reservation, live charging session tracking, and subscription.
 
 ```bash
 npm install
+cp .env.example .env    # then set EXPO_PUBLIC_API_URL to this machine's IPv4
 npx expo start
 ```
 
@@ -20,6 +21,9 @@ Then scan the QR code with the **Expo Go** app on a phone connected to the
 **same Wi-Fi network** as the computer. If the phone cannot reach the computer,
 the network most likely isolates its clients — use the phone's mobile hotspot
 instead.
+
+The backend must be reachable at the address set in `.env` — `localhost` will
+not work from a phone, which would resolve it to itself.
 
 ## Structure
 core/ shared configuration and services (Firebase, API calls)

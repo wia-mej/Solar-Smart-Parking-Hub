@@ -1,11 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
-import {
-  View, Text, FlatList, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, RefreshControl,
-} from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { getAllStations } from '../../core/services/station.service';
-import { logout } from '../../core/services/auth.service';
 import type { Station } from '../../core/models/station.model';
+import { colors, spacing, radius, typography } from '../../core/theme';
+import Screen from '../../shared/Screen';
+import AppInput from '../../shared/AppInput';
 
 export default function StationsScreen() {
   const [stations, setStations] = useState<Station[]>([]);
@@ -19,14 +18,16 @@ export default function StationsScreen() {
     try {
       setStations(await getAllStations());
     } catch {
-      setError("Impossible de joindre le serveur. Vérifie que le backend est démarré.");
+      setError('Impossible de joindre le serveur.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -38,23 +39,22 @@ export default function StationsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#002860" />
-      </View>
+      <Screen>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Stations</Text>
-        <TouchableOpacity onPress={logout}>
-          <Text style={styles.logout}>Déconnexion</Text>
-        </TouchableOpacity>
-      </View>
+    <Screen>
+      <Text style={styles.title}>Stations</Text>
+      <Text style={styles.subtitle}>
+        {stations.length} station{stations.length > 1 ? 's' : ''} sur le réseau
+      </Text>
 
-      <TextInput
-        style={styles.search}
+      <AppInput
         placeholder="Rechercher une station ou une ville"
         value={search}
         onChangeText={setSearch}
@@ -65,11 +65,16 @@ export default function StationsScreen() {
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={{ paddingBottom: spacing.xl }}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => { setRefreshing(true); load(); }}
+            tintColor={colors.primary}
+            onRefresh={() => {
+              setRefreshing(true);
+              load();
+            }}
           />
         }
         ListEmptyComponent={
@@ -77,49 +82,59 @@ export default function StationsScreen() {
         }
         renderItem={({ item }) => {
           const dispo = item.bornes.filter((b) => b.statut === 'DISPONIBLE').length;
+          const complet = dispo === 0;
           return (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>{item.nom}</Text>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>{item.nom}</Text>
+                <View style={[styles.dot, complet && styles.dotFull]} />
+              </View>
               <Text style={styles.cardCity}>{item.ville}</Text>
               <Text style={styles.cardAddress}>{item.adresse}</Text>
-              <View style={[styles.badge, dispo === 0 && styles.badgeFull]}>
-                <Text style={[styles.badgeText, dispo === 0 && styles.badgeTextFull]}>
-                    {dispo} borne{dispo > 1 ? 's' : ''} libre{dispo > 1 ? 's' : ''} sur {item.bornes.length}
+
+              <View style={[styles.badge, complet && styles.badgeFull]}>
+                <Text style={[styles.badgeText, complet && styles.badgeTextFull]}>
+                  {dispo} borne{dispo > 1 ? 's' : ''} libre{dispo > 1 ? 's' : ''} sur{' '}
+                  {item.bornes.length}
                 </Text>
               </View>
             </View>
           );
         }}
       />
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f7fa', paddingTop: 56, paddingHorizontal: 16 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f4f7fa' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#002860' },
-  logout: { color: '#0098c0', fontWeight: '600' },
-  search: {
-    backgroundColor: '#fff', borderWidth: 1, borderColor: '#d7dde5',
-    borderRadius: 8, padding: 12, marginBottom: 12,
-  },
-  list: { paddingBottom: 32 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  title: typography.title,
+  subtitle: { ...typography.small, marginBottom: spacing.md },
   card: {
-    backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12,
-    borderWidth: 1, borderColor: '#e6ebf1',
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm + 4,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  cardTitle: { fontSize: 17, fontWeight: '600', color: '#002860' },
-  cardCity: { color: '#0098c0', marginTop: 2, fontWeight: '500' },
-  cardAddress: { color: '#5b6b7f', marginTop: 4, fontSize: 13 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  cardTitle: { ...typography.heading, flex: 1 },
+  dot: { width: 10, height: 10, borderRadius: radius.pill, backgroundColor: colors.primary },
+  dotFull: { backgroundColor: colors.danger },
+  cardCity: { color: colors.primaryDark, fontWeight: '500', marginTop: 2 },
+  cardAddress: { ...typography.small, marginTop: spacing.xs },
   badge: {
-    alignSelf: 'flex-start', marginTop: 12, backgroundColor: '#e6f6fb',
-    paddingVertical: 5, paddingHorizontal: 10, borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginTop: spacing.md,
+    backgroundColor: colors.primarySoft,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.sm + 2,
+    borderRadius: radius.sm,
   },
-  badgeFull: { backgroundColor: '#fdeaea' },
-  badgeText: { color: '#0098c0', fontWeight: '600', fontSize: 12 },
-  badgeTextFull: { color: '#c0392b' },
-  error: { color: '#c0392b', marginBottom: 12 },
-  empty: { textAlign: 'center', color: '#5b6b7f', marginTop: 32 },
+  badgeFull: { backgroundColor: colors.dangerSoft },
+  badgeText: { color: colors.primaryDark, fontWeight: '600', fontSize: 12 },
+  badgeTextFull: { color: colors.danger },
+  error: { color: colors.danger, marginBottom: spacing.sm },
+  empty: { ...typography.small, textAlign: 'center', marginTop: spacing.xl },
 });

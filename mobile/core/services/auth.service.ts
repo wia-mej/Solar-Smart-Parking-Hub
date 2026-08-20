@@ -25,3 +25,7 @@ export function observeAuthState(callback: (user: User | null) => void) {
 export function getIdToken(): Promise<string | null> {
   return auth.currentUser ? auth.currentUser.getIdToken() : Promise.resolve(null);
 }
+
+export function getCurrentUser(): User | null {
+  return auth.currentUser;
+}

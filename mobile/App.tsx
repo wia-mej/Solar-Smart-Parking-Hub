@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import type { User } from 'firebase/auth';
 import { observeAuthState } from './core/services/auth.service';
 import LoginScreen from './features/login/LoginScreen';
 import SignupScreen from './features/login/SignupScreen';
-import StationsScreen from './features/stations/StationsScreen';
+import AppTabs from './navigation/AppTabs';
+import { colors } from './core/theme';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -21,25 +23,21 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  if (checking) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#002860" />
-      </View>
-    );
-  }
-
   return (
-    <>
+    <SafeAreaProvider>
       <StatusBar style="dark" />
-      {user && !signingUp ? (
-        <StationsScreen />
+      {checking ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : user && !signingUp ? (
+        <AppTabs />
       ) : mode === 'login' ? (
         <LoginScreen onGoToSignup={() => setMode('signup')} />
       ) : (
         <SignupScreen onGoToLogin={() => setMode('login')} onBusyChange={setSigningUp} />
       )}
-    </>
+    </SafeAreaProvider>
   );
 }
 
@@ -48,7 +46,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 24,
+    backgroundColor: colors.background,
   },
 });
