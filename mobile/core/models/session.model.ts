@@ -12,4 +12,5 @@ export interface SessionCharge {
   statut: StatutSession;
   origine: 'RESERVEE' | 'WALK_IN';
   puissanceKw: number;
+  dureeSecondes: number;
 }

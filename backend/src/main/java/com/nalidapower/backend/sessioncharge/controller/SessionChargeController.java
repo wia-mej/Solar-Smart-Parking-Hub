@@ -18,6 +18,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.nalidapower.backend.reservation.model.StatutReservation;
+import com.nalidapower.backend.reservation.repository.ReservationRepository;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -32,13 +34,16 @@ public class SessionChargeController {
     private final SessionChargeRepository sessionChargeRepository;
     private final StationRepository stationRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final ReservationRepository reservationRepository;
 
     public SessionChargeController(SessionChargeRepository sessionChargeRepository,
                                    StationRepository stationRepository,
-                                   UtilisateurRepository utilisateurRepository) {
+                                   UtilisateurRepository utilisateurRepository,
+                                   ReservationRepository reservationRepository) {
         this.sessionChargeRepository = sessionChargeRepository;
         this.stationRepository = stationRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     /** Vue backoffice : toutes les sessions. */
@@ -136,6 +141,18 @@ public class SessionChargeController {
 
         sessionChargeRepository.save(session);
 
+        // Si la charge démarre depuis une réservation, celle-ci a joué son rôle
+        if (requete.getReservationId() != null) {
+            final String idUtilisateur = utilisateurId;
+            reservationRepository.findById(requete.getReservationId()).ifPresent(reservation -> {
+                if (idUtilisateur.equals(reservation.getUtilisateurId())
+                        && reservation.getStatut() == StatutReservation.CONFIRMEE) {
+                    reservation.setStatut(StatutReservation.TERMINEE);
+                    reservationRepository.save(reservation);
+                }
+            });
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(toDetailDTO(session));
     }
 
@@ -221,6 +238,8 @@ public class SessionChargeController {
                 session.getOrigine()
         );
         dto.setPuissanceKw(puissanceBorne(session));
+        LocalDateTime fin = session.getDateFin() != null ? session.getDateFin() : LocalDateTime.now();
+        dto.setDureeSecondes(Math.max(0, Duration.between(session.getDateDebut(), fin).toSeconds()));
         return dto;
     }
 }

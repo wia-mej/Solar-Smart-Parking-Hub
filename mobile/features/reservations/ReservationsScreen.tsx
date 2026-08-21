@@ -1,12 +1,14 @@
 import { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, Alert, TouchableOpacity } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { getMesReservations, annulerReservation } from '../../core/services/reservation.service';
+import { demarrerSession } from '../../core/services/session.service';
 import type { Reservation, StatutReservation } from '../../core/models/reservation.model';
 import { formatDateHeure } from '../../core/date';
 import { colors, spacing, radius, typography } from '../../core/theme';
 import Screen from '../../shared/Screen';
+import AppButton from '../../shared/AppButton';
 
 const STATUT_STYLE: Record<StatutReservation, { label: string; bg: string; fg: string }> = {
   CONFIRMEE: { label: 'Confirmée', bg: colors.primarySoft, fg: colors.primaryDark },
@@ -16,10 +18,13 @@ const STATUT_STYLE: Record<StatutReservation, { label: string; bg: string; fg: s
 };
 
 export default function ReservationsScreen() {
+  const navigation = useNavigation();
+
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [demarrageId, setDemarrageId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -38,6 +43,33 @@ export default function ReservationsScreen() {
       load();
     }, [load]),
   );
+
+  const lancerCharge = async (reservation: Reservation) => {
+    setDemarrageId(reservation.id);
+    try {
+      await demarrerSession(
+        reservation.stationId,
+        reservation.borneIdentifiant,
+        'RESERVEE',
+        reservation.id,
+      );
+      await load();
+      Alert.alert('Charge démarrée', 'Suis ta session dans l\'onglet « Ma charge ».', [
+        { text: 'Plus tard', style: 'cancel' },
+        {
+          text: 'Voir ma charge',
+          onPress: () => navigation.getParent()?.navigate('Ma charge' as never),
+        },
+      ]);
+    } catch {
+      Alert.alert(
+        'Démarrage impossible',
+        'La borne est peut-être occupée, ou une session est déjà en cours.',
+      );
+    } finally {
+      setDemarrageId(null);
+    }
+  };
 
   const demanderAnnulation = (reservation: Reservation) => {
     Alert.alert(
@@ -109,7 +141,7 @@ export default function ReservationsScreen() {
         }
         renderItem={({ item }) => {
           const statut = STATUT_STYLE[item.statut];
-          const annulable = item.statut === 'CONFIRMEE' || item.statut === 'EN_ATTENTE';
+          const active = item.statut === 'CONFIRMEE' || item.statut === 'EN_ATTENTE';
 
           return (
             <View style={styles.card}>
@@ -131,10 +163,21 @@ export default function ReservationsScreen() {
                 </Text>
               </View>
 
-              {annulable && (
-                <TouchableOpacity style={styles.cancel} onPress={() => demanderAnnulation(item)}>
-                  <Text style={styles.cancelText}>Annuler la réservation</Text>
-                </TouchableOpacity>
+              {active && (
+                <>
+                  <View style={{ marginTop: spacing.md }}>
+                    <AppButton
+                      label="Démarrer la charge"
+                      onPress={() => lancerCharge(item)}
+                      loading={demarrageId === item.id}
+                      disabled={demarrageId !== null}
+                    />
+                  </View>
+
+                  <TouchableOpacity style={styles.cancel} onPress={() => demanderAnnulation(item)}>
+                    <Text style={styles.cancelText}>Annuler la réservation</Text>
+                  </TouchableOpacity>
+                </>
               )}
             </View>
           );

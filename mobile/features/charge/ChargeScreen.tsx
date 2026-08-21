@@ -19,6 +19,11 @@ export default function ChargeScreen() {
   const [loading, setLoading] = useState(true);
   const [arret, setArret] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Durée fournie par le serveur au moment du chargement, puis écart mesuré
+  // localement — jamais de comparaison entre deux horloges différentes.
+  const [baseSecondes, setBaseSecondes] = useState(0);
+  const [ancrage, setAncrage] = useState(Date.now());
   const [maintenant, setMaintenant] = useState(Date.now());
 
   const load = useCallback(async () => {
@@ -26,6 +31,9 @@ export default function ChargeScreen() {
     try {
       const [enCours, toutes] = await Promise.all([getMaSessionEnCours(), getMesSessions()]);
       setSession(enCours);
+      setBaseSecondes(enCours?.dureeSecondes ?? 0);
+      setAncrage(Date.now());
+      setMaintenant(Date.now());
       setHistorique(toutes.filter((s) => s.statut !== 'EN_COURS'));
     } catch {
       setError('Impossible de joindre le serveur.');
@@ -79,9 +87,7 @@ export default function ChargeScreen() {
     );
   }
 
-  const secondes = session
-    ? Math.max(0, (maintenant - new Date(session.dateDebut).getTime()) / 1000)
-    : 0;
+  const secondes = session ? baseSecondes + (maintenant - ancrage) / 1000 : 0;
   const energie = (secondes / 3600) * (session?.puissanceKw ?? 0);
 
   return (

@@ -15,6 +15,7 @@ public class ReservationDetailDTO {
     private LocalDateTime dateFin;
     private StatutReservation statut;
     private OrigineReservation origine;
+    private String stationId;
 
     public ReservationDetailDTO() {
     }
@@ -95,5 +96,13 @@ public class ReservationDetailDTO {
 
     public void setOrigine(OrigineReservation origine) {
         this.origine = origine;
+    }
+
+    public String getStationId() {
+        return stationId;
+    }
+
+    public void setStationId(String stationId) {
+        this.stationId = stationId;
     }
 }

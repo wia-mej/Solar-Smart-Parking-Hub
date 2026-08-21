@@ -1,7 +1,8 @@
 export type StatutReservation = 'EN_ATTENTE' | 'CONFIRMEE' | 'ANNULEE' | 'TERMINEE';
 
 export interface Reservation {
-  id: string;
+  id: string;  
+  stationId: string;
   clientNom: string;
   stationNom: string;
   borneIdentifiant: string;
@@ -9,4 +10,5 @@ export interface Reservation {
   dateFin: string;
   statut: StatutReservation;
   origine: 'RESERVEE' | 'WALK_IN';
+  
 }

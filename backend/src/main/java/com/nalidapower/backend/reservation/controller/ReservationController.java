@@ -160,7 +160,7 @@ public class ReservationController {
                 .map(Station::getNom)
                 .orElse("Station inconnue");
 
-        return new ReservationDetailDTO(
+        ReservationDetailDTO dto = new ReservationDetailDTO(
                 reservation.getId(),
                 clientNom,
                 stationNom,
@@ -170,5 +170,7 @@ public class ReservationController {
                 reservation.getStatut(),
                 reservation.getOrigine()
         );
+        dto.setStationId(reservation.getStationId());
+        return dto;
     }
 }

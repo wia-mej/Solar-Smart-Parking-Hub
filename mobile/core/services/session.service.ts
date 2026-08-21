@@ -13,11 +13,13 @@ export function demarrerSession(
   stationId: string,
   borneIdentifiant: string,
   origine: 'RESERVEE' | 'WALK_IN',
+  reservationId?: string,
 ): Promise<SessionCharge> {
   return apiPost<SessionCharge>('/sessions-charge/demarrer', {
     stationId,
     borneIdentifiant,
     origine,
+    reservationId: reservationId ?? null,
   });
 }
 
