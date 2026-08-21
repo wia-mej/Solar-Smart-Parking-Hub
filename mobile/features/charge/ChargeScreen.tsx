@@ -7,6 +7,7 @@ import {
   getMesSessions,
   arreterSession,
 } from '../../core/services/session.service';
+import { annulerAlertes, CAPACITE_BATTERIE_KWH } from '../../core/services/notification.service';
 import type { SessionCharge } from '../../core/models/session.model';
 import { formatDateHeure, formatDuree } from '../../core/date';
 import { colors, spacing, radius, typography } from '../../core/theme';
@@ -20,8 +21,6 @@ export default function ChargeScreen() {
   const [arret, setArret] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Durée fournie par le serveur au moment du chargement, puis écart mesuré
-  // localement — jamais de comparaison entre deux horloges différentes.
   const [baseSecondes, setBaseSecondes] = useState(0);
   const [ancrage, setAncrage] = useState(Date.now());
   const [maintenant, setMaintenant] = useState(Date.now());
@@ -48,7 +47,6 @@ export default function ChargeScreen() {
     }, [load]),
   );
 
-  // Le compteur ne tourne que s'il y a une session en cours
   useEffect(() => {
     if (!session) return;
     const timer = setInterval(() => setMaintenant(Date.now()), 1000);
@@ -66,6 +64,7 @@ export default function ChargeScreen() {
           setArret(true);
           try {
             await arreterSession(session.id);
+            await annulerAlertes();
             await load();
           } catch {
             Alert.alert('Erreur', "La session n'a pas pu être arrêtée.");
@@ -89,6 +88,7 @@ export default function ChargeScreen() {
 
   const secondes = session ? baseSecondes + (maintenant - ancrage) / 1000 : 0;
   const energie = (secondes / 3600) * (session?.puissanceKw ?? 0);
+  const pourcentage = Math.min(100, (energie / CAPACITE_BATTERIE_KWH) * 100);
 
   return (
     <Screen>
@@ -98,30 +98,62 @@ export default function ChargeScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {session ? (
-          <View style={styles.liveCard}>
-            <View style={styles.livePill}>
-              <View style={styles.liveDot} />
-              <Text style={styles.livePillText}>Charge en cours</Text>
+          <>
+            {pourcentage >= 100 ? (
+              <View style={[styles.banniere, styles.banniereVerte]}>
+                <Ionicons name="checkmark-circle" size={20} color={colors.primaryDark} />
+                <Text style={styles.banniereVerteText}>
+                  Charge complète — pense à libérer la place.
+                </Text>
+              </View>
+            ) : pourcentage >= 80 ? (
+              <View style={[styles.banniere, styles.banniereAmbre]}>
+                <Ionicons name="battery-charging" size={20} color={colors.solar} />
+                <Text style={styles.banniereAmbreText}>
+                  Charge à 80 % — tu peux bientôt repartir.
+                </Text>
+              </View>
+            ) : null}
+
+            <View style={styles.liveCard}>
+              <View style={styles.livePill}>
+                <View style={styles.liveDot} />
+                <Text style={styles.livePillText}>Charge en cours</Text>
+              </View>
+
+              <Text style={styles.liveStation}>{session.stationNom}</Text>
+              <Text style={styles.liveBorne}>
+                Borne {session.borneIdentifiant} · {session.puissanceKw} kW
+              </Text>
+
+              <Text style={styles.chrono}>{formatDuree(secondes)}</Text>
+
+              <View style={styles.energieBox}>
+                <Ionicons name="flash" size={18} color={colors.solar} />
+                <Text style={styles.energieText}>{energie.toFixed(2)} kWh estimés</Text>
+              </View>
+
+              <View style={styles.barreFond}>
+                <View
+                  style={[
+                    styles.barreRemplie,
+                    { width: `${pourcentage}%` },
+                    pourcentage >= 100 && styles.barreComplete,
+                  ]}
+                />
+              </View>
+              <Text style={styles.barreLegende}>
+                {Math.round(pourcentage)} % — estimation sur une batterie de{' '}
+                {CAPACITE_BATTERIE_KWH} kWh
+              </Text>
+
+              <Text style={styles.depuis}>Démarrée à {formatDateHeure(session.dateDebut)}</Text>
+
+              <View style={{ marginTop: spacing.lg }}>
+                <AppButton label="Arrêter la charge" onPress={stopper} loading={arret} />
+              </View>
             </View>
-
-            <Text style={styles.liveStation}>{session.stationNom}</Text>
-            <Text style={styles.liveBorne}>
-              Borne {session.borneIdentifiant} · {session.puissanceKw} kW
-            </Text>
-
-            <Text style={styles.chrono}>{formatDuree(secondes)}</Text>
-
-            <View style={styles.energieBox}>
-              <Ionicons name="flash" size={18} color={colors.solar} />
-              <Text style={styles.energieText}>{energie.toFixed(2)} kWh estimés</Text>
-            </View>
-
-            <Text style={styles.depuis}>Démarrée à {formatDateHeure(session.dateDebut)}</Text>
-
-            <View style={{ marginTop: spacing.lg }}>
-              <AppButton label="Arrêter la charge" onPress={stopper} loading={arret} />
-            </View>
-          </View>
+          </>
         ) : (
           <View style={styles.emptyCard}>
             <Ionicons name="flash-off-outline" size={34} color={colors.textMuted} />
@@ -159,6 +191,18 @@ export default function ChargeScreen() {
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { ...typography.title, marginBottom: spacing.md },
+  banniere: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  banniereAmbre: { backgroundColor: colors.solarSoft },
+  banniereAmbreText: { color: '#8A5A00', fontWeight: '600', fontSize: 13, flex: 1 },
+  banniereVerte: { backgroundColor: colors.primarySoft },
+  banniereVerteText: { color: colors.primaryDark, fontWeight: '600', fontSize: 13, flex: 1 },
   liveCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
@@ -198,6 +242,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   energieText: { color: '#8A5A00', fontWeight: '700' },
+  barreFond: {
+    width: '100%',
+    height: 10,
+    borderRadius: radius.pill,
+    backgroundColor: colors.border,
+    marginTop: spacing.lg,
+    overflow: 'hidden',
+  },
+  barreRemplie: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.solar },
+  barreComplete: { backgroundColor: colors.primary },
+  barreLegende: { ...typography.small, fontSize: 11, marginTop: spacing.sm },
   depuis: { ...typography.small, marginTop: spacing.md },
   emptyCard: {
     backgroundColor: colors.surface,
@@ -209,7 +264,12 @@ const styles = StyleSheet.create({
   },
   emptyTitle: { ...typography.heading, fontSize: 17, marginTop: spacing.md },
   emptyText: { ...typography.small, textAlign: 'center', marginTop: spacing.xs, lineHeight: 20 },
-  sectionTitle: { ...typography.heading, fontSize: 17, marginTop: spacing.lg, marginBottom: spacing.sm },
+  sectionTitle: {
+    ...typography.heading,
+    fontSize: 17,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
   histCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,

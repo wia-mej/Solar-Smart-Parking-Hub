@@ -4,6 +4,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { getMesReservations, annulerReservation } from '../../core/services/reservation.service';
 import { demarrerSession } from '../../core/services/session.service';
+import { programmerAlertesCharge } from '../../core/services/notification.service';
 import type { Reservation, StatutReservation } from '../../core/models/reservation.model';
 import { formatDateHeure } from '../../core/date';
 import { colors, spacing, radius, typography } from '../../core/theme';
@@ -47,14 +48,22 @@ export default function ReservationsScreen() {
   const lancerCharge = async (reservation: Reservation) => {
     setDemarrageId(reservation.id);
     try {
-      await demarrerSession(
+      const session = await demarrerSession(
         reservation.stationId,
         reservation.borneIdentifiant,
         'RESERVEE',
         reservation.id,
       );
+
+      await programmerAlertesCharge(
+        session.stationNom,
+        session.borneIdentifiant,
+        session.puissanceKw,
+      );
+
       await load();
-      Alert.alert('Charge démarrée', 'Suis ta session dans l\'onglet « Ma charge ».', [
+
+      Alert.alert('Charge démarrée', 'Tu seras prévenue à 80 % et en fin de charge.', [
         { text: 'Plus tard', style: 'cancel' },
         {
           text: 'Voir ma charge',

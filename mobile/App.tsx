@@ -8,6 +8,7 @@ import LoginScreen from './features/login/LoginScreen';
 import SignupScreen from './features/login/SignupScreen';
 import AppTabs from './navigation/AppTabs';
 import { colors } from './core/theme';
+import { demanderPermissionNotifications } from './core/services/notification.service';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -21,6 +22,10 @@ export default function App() {
       setChecking(false);
     });
     return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    demanderPermissionNotifications();
   }, []);
 
   return (

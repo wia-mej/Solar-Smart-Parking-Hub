@@ -9,6 +9,7 @@ import { demarrerSession } from '../../core/services/session.service';
 import { colors, spacing, radius, typography } from '../../core/theme';
 import Screen from '../../shared/Screen';
 import AppButton from '../../shared/AppButton';
+import { programmerAlertesCharge, programmerRappelFinReservation } from '../../core/services/notification.service';
 
 const DUREES = [
   { label: '1 h', heures: 1 },
@@ -48,6 +49,7 @@ export default function StationDetailScreen() {
 
     try {
       await creerReservation(station.id, borneChoisie.identifiant, debut, fin);
+      await programmerRappelFinReservation(station.nom, fin.toISOString());
       majBorne(borneChoisie.identifiant, 'RESERVEE');
       const identifiant = borneChoisie.identifiant;
       setBorneChoisie(null);
@@ -62,31 +64,37 @@ export default function StationDetailScreen() {
     }
   };
 
-  const demarrer = async () => {
+    const demarrer = async () => {
     if (!borneChoisie) return;
     setEnvoi(true);
 
-    const origine = borneChoisie.statut === 'RESERVEE' ? 'RESERVEE' : 'WALK_IN';
+      const origine = borneChoisie.statut === 'RESERVEE' ? 'RESERVEE' : 'WALK_IN';
 
-    try {
-      await demarrerSession(station.id, borneChoisie.identifiant, origine);
-      majBorne(borneChoisie.identifiant, 'OCCUPEE');
-      setBorneChoisie(null);
-      Alert.alert('Charge démarrée', 'Suis ta session dans l\'onglet « Ma charge ».', [
-        { text: 'Plus tard', style: 'cancel' },
-        {
-          text: 'Voir ma charge',
-          onPress: () => navigation.getParent()?.navigate('Ma charge' as never),
-        },
-      ]);
-    } catch {
-      Alert.alert(
-        'Démarrage impossible',
-        'Cette borne est peut-être occupée, ou une session est déjà en cours.',
-      );
-    } finally {
-      setEnvoi(false);
-    }
+      try {
+        const session = await demarrerSession(station.id, borneChoisie.identifiant, origine);
+        await programmerAlertesCharge(
+          session.stationNom,
+          session.borneIdentifiant,
+          session.puissanceKw,
+        );
+
+        majBorne(borneChoisie.identifiant, 'OCCUPEE');
+        setBorneChoisie(null);
+        Alert.alert('Charge démarrée', 'Tu seras prévenue à 80 % et en fin de charge.', [
+          { text: 'Plus tard', style: 'cancel' },
+          {
+            text: 'Voir ma charge',
+            onPress: () => navigation.getParent()?.navigate('Ma charge' as never),
+          },
+        ]);
+      } catch {
+        Alert.alert(
+          'Démarrage impossible',
+          'Cette borne est peut-être occupée, ou une session est déjà en cours.',
+        );
+      } finally {
+        setEnvoi(false);
+      }
   };
 
   return (
