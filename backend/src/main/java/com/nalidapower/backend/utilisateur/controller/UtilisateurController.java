@@ -24,7 +24,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.nalidapower.backend.utilisateur.dto.SouscrireAbonnementRequest;
+import com.nalidapower.backend.utilisateur.model.Abonnement;
 
+import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/v1/utilisateurs")
 public class UtilisateurController {
@@ -136,6 +139,49 @@ public class UtilisateurController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utilisateur non identifié");
         }
         return ResponseEntity.ok(toDetailDTO(utilisateur));
+    }
+
+    /** Souscription (ou changement) de formule d'abonnement pour le compte connecté. */
+    @PostMapping("/moi/abonnement")
+    public ResponseEntity<?> souscrireAbonnement(@RequestBody SouscrireAbonnementRequest requete,
+                                                 HttpServletRequest httpRequest) {
+
+        Utilisateur utilisateur = (Utilisateur) httpRequest.getAttribute("utilisateur");
+        if (utilisateur == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utilisateur non identifié");
+        }
+        if (requete.getType() == null) {
+            return ResponseEntity.badRequest().body("Formule d'abonnement manquante");
+        }
+
+        Abonnement abonnement = new Abonnement();
+        abonnement.setType(requete.getType());
+        abonnement.setDateDebut(LocalDate.now());
+        abonnement.setDateFin(LocalDate.now().plusMonths(1));
+        abonnement.setActif(true);
+
+        utilisateur.setAbonnement(abonnement);
+        Utilisateur enregistre = utilisateurRepository.save(utilisateur);
+
+        return ResponseEntity.ok(toDetailDTO(enregistre));
+    }
+
+    /** Résiliation : l'abonnement reste en base mais devient inactif. */
+    @PostMapping("/moi/abonnement/resilier")
+    public ResponseEntity<?> resilierAbonnement(HttpServletRequest httpRequest) {
+
+        Utilisateur utilisateur = (Utilisateur) httpRequest.getAttribute("utilisateur");
+        if (utilisateur == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utilisateur non identifié");
+        }
+        if (utilisateur.getAbonnement() == null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Aucun abonnement à résilier");
+        }
+
+        utilisateur.getAbonnement().setActif(false);
+        Utilisateur enregistre = utilisateurRepository.save(utilisateur);
+
+        return ResponseEntity.ok(toDetailDTO(enregistre));
     }
 
     private String genererMotDePasseAleatoireJetable() {

@@ -1,4 +1,5 @@
 export type RoleUtilisateur = 'ADMIN' | 'CONDUCTEUR';
+export type TypeAbonnement = 'BASIC' | 'STANDARD' | 'PREMIUM' | 'CORPORATE';
 
 export interface Utilisateur {
   id: string;
@@ -8,7 +9,7 @@ export interface Utilisateur {
   telephone: string | null;
   role: RoleUtilisateur;
   dateCreation: string;
-  abonnementType: string | null;
+  abonnementType: TypeAbonnement | null;
   abonnementActif: boolean;
   nombreVehicules: number;
 }

@@ -3,11 +3,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../core/theme';
+import AccueilScreen from '../features/accueil/AccueilScreen';
 import StationsStack from './StationsStack';
-import ProfilScreen from '../features/profil/ProfilScreen';
+import ProfilStack from './ProfilStack';
 import ChargeScreen from '../features/charge/ChargeScreen';
 import ReservationsScreen from '../features/reservations/ReservationsScreen';
-import AccueilScreen from '../features/accueil/AccueilScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -69,7 +69,7 @@ export default function AppTabs() {
         />
         <Tab.Screen
           name="Profil"
-          component={ProfilScreen}
+          component={ProfilStack}
           options={{
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="person-outline" color={color} size={size} />

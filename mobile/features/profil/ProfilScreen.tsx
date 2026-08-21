@@ -1,14 +1,26 @@
 import { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { getMonProfil } from '../../core/services/utilisateur.service';
 import { logout, getCurrentUser } from '../../core/services/auth.service';
 import type { Utilisateur } from '../../core/models/utilisateur.model';
+import type { ProfilStackParamList } from '../../navigation/ProfilStack';
 import { colors, spacing, radius, typography } from '../../core/theme';
 import Screen from '../../shared/Screen';
 import AppButton from '../../shared/AppButton';
 
+const LIBELLE_FORMULE: Record<string, string> = {
+  BASIC: 'Basic',
+  STANDARD: 'Standard',
+  PREMIUM: 'Premium',
+  CORPORATE: 'Corporate',
+};
+
 export default function ProfilScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<ProfilStackParamList>>();
+
   const [profil, setProfil] = useState<Utilisateur | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +53,7 @@ export default function ProfilScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <>
+        <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.card}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{initiale}</Text>
@@ -59,16 +71,28 @@ export default function ProfilScreen() {
             {profil?.telephone ? <Text style={styles.tel}>{profil.telephone}</Text> : null}
           </View>
 
-          <View style={styles.cardLeft}>
-            <Text style={styles.sectionTitle}>Abonnement</Text>
+          <TouchableOpacity
+            style={styles.cardLeft}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('Abonnement')}
+          >
+            <View style={styles.ligneEntete}>
+              <Text style={styles.sectionTitle}>Abonnement</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            </View>
+
             {profil?.abonnementActif && profil?.abonnementType ? (
               <View style={styles.abonnementBadge}>
-                <Text style={styles.abonnementText}>{profil.abonnementType}</Text>
+                <Text style={styles.abonnementText}>
+                  {LIBELLE_FORMULE[profil.abonnementType] ?? profil.abonnementType}
+                </Text>
               </View>
             ) : (
-              <Text style={styles.sectionBody}>Aucun abonnement actif.</Text>
+              <Text style={styles.sectionBody}>
+                Aucun abonnement actif — voir les formules ›
+              </Text>
             )}
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.cardLeft}>
             <Text style={styles.sectionTitle}>Véhicules</Text>
@@ -79,10 +103,10 @@ export default function ProfilScreen() {
             </Text>
           </View>
 
-          <View style={styles.spacer} />
+          <View style={{ height: spacing.xl }} />
           <AppButton label="Se déconnecter" variant="outline" onPress={logout} />
           <View style={{ height: spacing.lg }} />
-        </>
+        </ScrollView>
       )}
     </Screen>
   );
@@ -108,6 +132,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.md,
   },
+  ligneEntete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   avatar: {
     width: 64,
     height: 64,
@@ -140,5 +165,4 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   abonnementText: { color: '#8A5A00', fontWeight: '700', fontSize: 12 },
-  spacer: { flex: 1 },
 });

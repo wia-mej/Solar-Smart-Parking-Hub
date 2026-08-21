@@ -100,11 +100,11 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
     private boolean estReserveAdmin(HttpServletRequest request) {
         String uri = request.getRequestURI();
 
-        // Chacun peut consulter son propre profil
-        if ("/api/v1/utilisateurs/moi".equals(uri)) {
+        // Chacun gère son propre compte (profil, abonnement)
+        if (uri.startsWith("/api/v1/utilisateurs/moi")) {
             return false;
         }
-        
+
         // La recommandation de créneau est destinée aux conducteurs
         if (uri.startsWith("/api/v1/predictions/meilleur-creneau")) {
             return false;
