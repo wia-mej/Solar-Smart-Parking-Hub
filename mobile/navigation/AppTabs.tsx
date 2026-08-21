@@ -7,9 +7,9 @@ import StationsStack from './StationsStack';
 import ProfilScreen from '../features/profil/ProfilScreen';
 import ChargeScreen from '../features/charge/ChargeScreen';
 import ReservationsScreen from '../features/reservations/ReservationsScreen';
+import AccueilScreen from '../features/accueil/AccueilScreen';
+
 const Tab = createBottomTabNavigator();
-
-
 
 export default function AppTabs() {
   const insets = useSafeAreaInsets();
@@ -31,6 +31,15 @@ export default function AppTabs() {
           tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         }}
       >
+        <Tab.Screen
+          name="Accueil"
+          component={AccueilScreen}
+          options={{
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="home-outline" color={color} size={size} />
+            ),
+          }}
+        />
         <Tab.Screen
           name="Stations"
           component={StationsStack}

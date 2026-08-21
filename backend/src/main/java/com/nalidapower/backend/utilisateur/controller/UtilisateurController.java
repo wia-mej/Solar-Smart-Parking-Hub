@@ -128,6 +128,16 @@ public class UtilisateurController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toDetailDTO(enregistre));
     }
 
+    /** Le profil métier de la personne authentifiée, quel que soit son rôle. */
+    @GetMapping("/moi")
+    public ResponseEntity<?> monProfil(HttpServletRequest httpRequest) {
+        Utilisateur utilisateur = (Utilisateur) httpRequest.getAttribute("utilisateur");
+        if (utilisateur == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utilisateur non identifié");
+        }
+        return ResponseEntity.ok(toDetailDTO(utilisateur));
+    }
+
     private String genererMotDePasseAleatoireJetable() {
         String caracteres = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
         SecureRandom random = new SecureRandom();
