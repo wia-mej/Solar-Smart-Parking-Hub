@@ -5,19 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../core/theme';
 import StationsStack from './StationsStack';
 import ProfilScreen from '../features/profil/ProfilScreen';
-import PlaceholderScreen from '../shared/PlaceholderScreen';
+import ChargeScreen from '../features/charge/ChargeScreen';
 import ReservationsScreen from '../features/reservations/ReservationsScreen';
 const Tab = createBottomTabNavigator();
 
 
-function ChargeScreen() {
-  return (
-    <PlaceholderScreen
-      title="Ma charge"
-      message="Le suivi de ta session de recharge en cours apparaîtra ici."
-    />
-  );
-}
 
 export default function AppTabs() {
   const insets = useSafeAreaInsets();

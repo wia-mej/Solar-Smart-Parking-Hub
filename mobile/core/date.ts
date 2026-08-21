@@ -20,3 +20,11 @@ export function formatDateHeure(iso: string): string {
     minute: '2-digit',
   });
 }
+
+export function formatDuree(secondes: number): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const h = Math.floor(secondes / 3600);
+  const m = Math.floor((secondes % 3600) / 60);
+  const s = Math.floor(secondes % 60);
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}

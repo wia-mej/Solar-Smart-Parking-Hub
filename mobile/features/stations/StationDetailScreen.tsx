@@ -3,19 +3,20 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, Alert } fr
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import type { StationsStackParamList } from '../../navigation/StationsStack';
-import type { Borne, Station } from '../../core/models/station.model';
+import type { Borne, Station, StatutBorne } from '../../core/models/station.model';
 import { creerReservation } from '../../core/services/reservation.service';
+import { demarrerSession } from '../../core/services/session.service';
 import { colors, spacing, radius, typography } from '../../core/theme';
 import Screen from '../../shared/Screen';
 import AppButton from '../../shared/AppButton';
 
 const DUREES = [
-  { label: '1 heure', heures: 1 },
-  { label: '2 heures', heures: 2 },
-  { label: '4 heures', heures: 4 },
+  { label: '1 h', heures: 1 },
+  { label: '2 h', heures: 2 },
+  { label: '4 h', heures: 4 },
 ];
 
-const LIBELLE_STATUT: Record<Borne['statut'], string> = {
+const LIBELLE_STATUT: Record<StatutBorne, string> = {
   DISPONIBLE: 'Disponible',
   OCCUPEE: 'Occupée',
   RESERVEE: 'Réservée',
@@ -31,31 +32,58 @@ export default function StationDetailScreen() {
   const [dureeHeures, setDureeHeures] = useState(1);
   const [envoi, setEnvoi] = useState(false);
 
-  const confirmer = async () => {
-    if (!borneChoisie) return;
+  const majBorne = (identifiant: string, statut: StatutBorne) => {
+    setStation((s) => ({
+      ...s,
+      bornes: s.bornes.map((b) => (b.identifiant === identifiant ? { ...b, statut } : b)),
+    }));
+  };
 
+  const reserver = async () => {
+    if (!borneChoisie) return;
     setEnvoi(true);
+
     const debut = new Date();
     const fin = new Date(debut.getTime() + dureeHeures * 60 * 60 * 1000);
 
     try {
       await creerReservation(station.id, borneChoisie.identifiant, debut, fin);
-
-      // Mise à jour locale : la borne réservée ne doit plus apparaître comme libre
-      setStation({
-        ...station,
-        bornes: station.bornes.map((b) =>
-          b.identifiant === borneChoisie.identifiant ? { ...b, statut: 'RESERVEE' } : b,
-        ),
-      });
-
+      majBorne(borneChoisie.identifiant, 'RESERVEE');
+      const identifiant = borneChoisie.identifiant;
       setBorneChoisie(null);
       Alert.alert(
         'Réservation confirmée',
-        `Borne ${borneChoisie.identifiant} réservée pour ${dureeHeures} heure${dureeHeures > 1 ? 's' : ''}.`,
+        `Borne ${identifiant} réservée pour ${dureeHeures} heure${dureeHeures > 1 ? 's' : ''}.`,
       );
     } catch {
       Alert.alert('Réservation impossible', "Cette borne n'est peut-être plus disponible.");
+    } finally {
+      setEnvoi(false);
+    }
+  };
+
+  const demarrer = async () => {
+    if (!borneChoisie) return;
+    setEnvoi(true);
+
+    const origine = borneChoisie.statut === 'RESERVEE' ? 'RESERVEE' : 'WALK_IN';
+
+    try {
+      await demarrerSession(station.id, borneChoisie.identifiant, origine);
+      majBorne(borneChoisie.identifiant, 'OCCUPEE');
+      setBorneChoisie(null);
+      Alert.alert('Charge démarrée', 'Suis ta session dans l\'onglet « Ma charge ».', [
+        { text: 'Plus tard', style: 'cancel' },
+        {
+          text: 'Voir ma charge',
+          onPress: () => navigation.getParent()?.navigate('Ma charge' as never),
+        },
+      ]);
+    } catch {
+      Alert.alert(
+        'Démarrage impossible',
+        'Cette borne est peut-être occupée, ou une session est déjà en cours.',
+      );
     } finally {
       setEnvoi(false);
     }
@@ -83,12 +111,14 @@ export default function StationDetailScreen() {
         <Text style={styles.sectionTitle}>Bornes de recharge</Text>
 
         {station.bornes.map((borne) => {
+          const utilisable = borne.statut === 'DISPONIBLE' || borne.statut === 'RESERVEE';
           const libre = borne.statut === 'DISPONIBLE';
+
           return (
             <TouchableOpacity
               key={borne.identifiant}
-              style={[styles.borneCard, !libre && styles.borneCardOff]}
-              disabled={!libre}
+              style={[styles.borneCard, !utilisable && styles.borneCardOff]}
+              disabled={!utilisable}
               activeOpacity={0.8}
               onPress={() => {
                 setBorneChoisie(borne);
@@ -103,8 +133,22 @@ export default function StationDetailScreen() {
                 </Text>
               </View>
 
-              <View style={[styles.statut, libre ? styles.statutLibre : styles.statutOccupe]}>
-                <Text style={[styles.statutText, libre ? styles.statutTextLibre : styles.statutTextOccupe]}>
+              <View
+                style={[
+                  styles.statut,
+                  libre ? styles.statutLibre : borne.statut === 'RESERVEE' ? styles.statutReserve : styles.statutOccupe,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.statutText,
+                    libre
+                      ? styles.statutTextLibre
+                      : borne.statut === 'RESERVEE'
+                        ? styles.statutTextReserve
+                        : styles.statutTextOccupe,
+                  ]}
+                >
                   {LIBELLE_STATUT[borne.statut]}
                 </Text>
               </View>
@@ -118,8 +162,19 @@ export default function StationDetailScreen() {
       <Modal visible={borneChoisie !== null} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Réserver la borne {borneChoisie?.identifiant}</Text>
-            <Text style={styles.modalSubtitle}>À partir de maintenant, pour :</Text>
+            <Text style={styles.modalTitle}>Borne {borneChoisie?.identifiant}</Text>
+            <Text style={styles.modalSubtitle}>
+              {borneChoisie?.puissanceKw} kW ·{' '}
+              {borneChoisie?.type === 'DC_RAPIDE' ? 'charge rapide' : 'charge standard'}
+            </Text>
+
+            <AppButton label="Démarrer la charge maintenant" onPress={demarrer} loading={envoi} />
+
+            <View style={styles.separator}>
+              <View style={styles.line} />
+              <Text style={styles.separatorText}>ou réserver pour</Text>
+              <View style={styles.line} />
+            </View>
 
             <View style={styles.durees}>
               {DUREES.map((d) => {
@@ -136,14 +191,20 @@ export default function StationDetailScreen() {
               })}
             </View>
 
-            <AppButton label="Confirmer la réservation" onPress={confirmer} loading={envoi} />
-            <View style={{ height: spacing.sm }} />
             <AppButton
-              label="Annuler"
+              label="Réserver cette borne"
               variant="outline"
+              onPress={reserver}
+              disabled={envoi || borneChoisie?.statut === 'RESERVEE'}
+            />
+
+            <TouchableOpacity
+              style={styles.fermer}
               onPress={() => setBorneChoisie(null)}
               disabled={envoi}
-            />
+            >
+              <Text style={styles.fermerText}>Fermer</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -185,9 +246,11 @@ const styles = StyleSheet.create({
   borneSpec: { ...typography.small, marginTop: 2 },
   statut: { paddingVertical: 6, paddingHorizontal: spacing.sm + 2, borderRadius: radius.sm },
   statutLibre: { backgroundColor: colors.primarySoft },
+  statutReserve: { backgroundColor: colors.solarSoft },
   statutOccupe: { backgroundColor: colors.dangerSoft },
   statutText: { fontSize: 12, fontWeight: '600' },
   statutTextLibre: { color: colors.primaryDark },
+  statutTextReserve: { color: '#8A5A00' },
   statutTextOccupe: { color: colors.danger },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' },
   modalCard: {
@@ -198,8 +261,16 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   modalTitle: { ...typography.heading },
-  modalSubtitle: { ...typography.small, marginTop: spacing.xs, marginBottom: spacing.md },
-  durees: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
+  modalSubtitle: { ...typography.small, marginTop: spacing.xs, marginBottom: spacing.lg },
+  separator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginVertical: spacing.lg,
+  },
+  line: { flex: 1, height: 1, backgroundColor: colors.border },
+  separatorText: { ...typography.small, fontSize: 12 },
+  durees: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
   duree: {
     flex: 1,
     borderWidth: 1.5,
@@ -211,4 +282,6 @@ const styles = StyleSheet.create({
   dureeActive: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
   dureeText: { ...typography.small, fontWeight: '600' },
   dureeTextActive: { color: colors.primaryDark },
+  fermer: { marginTop: spacing.md, alignItems: 'center', paddingVertical: spacing.sm },
+  fermerText: { ...typography.small, fontWeight: '600' },
 });
