@@ -43,10 +43,6 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
         return request.getRequestURI().startsWith("/actuator");
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getRequestURI().startsWith("/actuator");
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

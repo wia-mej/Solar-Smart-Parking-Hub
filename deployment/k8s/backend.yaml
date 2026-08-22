@@ -24,6 +24,8 @@ spec:
                 secretKeyRef:
                   name: backend-secret
                   key: MONGODB_URI
+            - name: AI_SERVICE_URL
+              value: "http://ai-service:8000"
 ---
 apiVersion: v1
 kind: Service
