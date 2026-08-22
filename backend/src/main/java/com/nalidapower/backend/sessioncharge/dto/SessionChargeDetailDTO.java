@@ -17,6 +17,8 @@ public class SessionChargeDetailDTO {
     private double energieConsommeeKwh;
     private StatutSession statut;
     private OrigineSession origine;
+    private double puissanceKw;
+    private long dureeSecondes;
 
     public SessionChargeDetailDTO() {
     }
@@ -114,5 +116,21 @@ public class SessionChargeDetailDTO {
 
     public void setOrigine(OrigineSession origine) {
         this.origine = origine;
+    }
+
+    public double getPuissanceKw() {
+        return puissanceKw;
+    }
+
+    public void setPuissanceKw(double puissanceKw) {
+        this.puissanceKw = puissanceKw;
+    }
+
+    public long getDureeSecondes() {
+        return dureeSecondes;
+    }
+
+    public void setDureeSecondes(long dureeSecondes) {
+        this.dureeSecondes = dureeSecondes;
     }
 }
