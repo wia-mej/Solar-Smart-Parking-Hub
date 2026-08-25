@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 
 import { AlerteService } from '../../core/services/alerte.service';
 import { AlerteDetail, NiveauAlerte } from '../../core/models/alerte.model';
@@ -6,6 +7,7 @@ import { StationService } from '../../core/services/station.service';
 import { Station } from '../../core/models/station.model';
 import { UtilisateurService } from '../../core/services/utilisateur.service';
 import { ProductionEnergieService } from '../../core/services/production-energie.service';
+import { PredictionService } from '../../core/services/prediction.service';
 
 interface StatCard {
   icon: 'dollar' | 'users' | 'activity' | 'zap';
@@ -17,6 +19,9 @@ interface StatCard {
   badgeUp: boolean;
   badgeNeutral?: boolean; // true = badge informatif, pas de flèche de tendance
 }
+
+/** Un point horaire du graphique, ou null si aucune donnée pour cette heure. */
+type SerieHoraire = (number | null)[];
 
 @Component({
   selector: 'app-dashboard',
@@ -122,13 +127,12 @@ export class Dashboard implements OnInit {
     private stationService: StationService,
     private utilisateurService: UtilisateurService,
     private productionEnergieService: ProductionEnergieService,
+    private predictionService: PredictionService,
     private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    // Graphique encore simulé volontairement : pas assez de données réelles
-    // horodatées sur aujourd'hui dans production_energie/predictions pour l'instant.
-    this.buildProductionChart();
+    this.loadProductionChart();
     this.loadAlertes();
     this.loadStations();
     this.loadUtilisateurs();
@@ -205,14 +209,19 @@ export class Dashboard implements OnInit {
     this.productionEnergieService.getAllProductionEnergie().subscribe({
       next: (productions) => {
         if (productions.length > 0) {
-          const derniere = productions.reduce((plusRecente, courante) =>
-            new Date(courante.timestamp) > new Date(plusRecente.timestamp)
-              ? courante
-              : plusRecente,
-          );
+          // Production instantanée du réseau : somme de toutes les stations
+          // sur le relevé le plus récent.
+          const dernierInstant = productions
+            .map((p) => new Date(p.timestamp).getTime())
+            .reduce((a, b) => Math.max(a, b));
+
+          const totalReseau = productions
+            .filter((p) => new Date(p.timestamp).getTime() === dernierInstant)
+            .reduce((somme, p) => somme + p.productionKw, 0);
+
           const energieStat = this.stats.find((s) => s.icon === 'zap');
           if (energieStat) {
-            energieStat.value = derniere.productionKw.toFixed(1);
+            energieStat.value = totalReseau.toFixed(1);
             energieStat.badgeText = 'Temps réel';
           }
         }
@@ -225,31 +234,101 @@ export class Dashboard implements OnInit {
     });
   }
 
-  private buildProductionChart(): void {
+  /**
+   * Charge en parallèle les relevés de production et les prédictions du modèle,
+   * puis construit le graphique « réelle vs prédite » de la journée en cours.
+   */
+  private loadProductionChart(): void {
+    forkJoin({
+      productions: this.productionEnergieService.getAllProductionEnergie(),
+      predictions: this.predictionService.getPredictionsProduction(),
+    }).subscribe({
+      next: ({ productions, predictions }) => {
+        const reelles = this.agregerParHeure(
+          productions.map((p) => ({ instant: p.timestamp, valeur: p.productionKw })),
+        );
+        const predites = this.agregerParHeure(
+          predictions.map((p) => ({ instant: p.timestampCible, valeur: p.valeurPredite })),
+        );
+
+        this.buildProductionChart(reelles, predites);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement du graphique de production', err);
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  /**
+   * Répartit des mesures sur les 24 heures de la journée en cours, en sommant
+   * les stations entre elles. Une heure sans donnée reste à `null` : c'est ce
+   * qui permet à la courbe réelle de s'arrêter à l'heure actuelle, tandis que
+   * la courbe prédite couvre toute la journée.
+   */
+  private agregerParHeure(mesures: { instant: string; valeur: number }[]): SerieHoraire {
+    const debutJour = new Date();
+    debutJour.setHours(0, 0, 0, 0);
+    const finJour = debutJour.getTime() + 24 * 60 * 60 * 1000;
+
+    const totaux: SerieHoraire = Array(24).fill(null);
+
+    for (const mesure of mesures) {
+      const date = new Date(mesure.instant);
+      const temps = date.getTime();
+      if (temps < debutJour.getTime() || temps >= finJour) {
+        continue;
+      }
+      const heure = date.getHours();
+      totaux[heure] = (totaux[heure] ?? 0) + mesure.valeur;
+    }
+
+    return totaux;
+  }
+
+  private buildProductionChart(reelles: SerieHoraire, predites: SerieHoraire): void {
     const padding = 20;
-    const hours = Array.from({ length: 24 }, (_, i) => i);
 
-    const gaussian = (h: number, peak: number, sigma: number, max: number) =>
-      Math.max(0, max * Math.exp(-Math.pow(h - peak, 2) / (2 * sigma * sigma)));
+    const valeurs = [...reelles, ...predites].filter((v): v is number => v !== null);
+    if (valeurs.length === 0) {
+      this.realPath = '';
+      this.predictedPath = '';
+      this.areaPath = '';
+      return;
+    }
 
-    const real = hours.map((h) => gaussian(h, 13, 3.4, 95));
-    const predicted = hours.map((h) => gaussian(h, 13, 3.6, 92) + Math.sin(h) * 1.5);
+    const maxValue = Math.max(...valeurs) * 1.1;
+    const stepX = this.chartWidth / 23;
 
-    const maxValue = Math.max(...real, ...predicted) * 1.1;
-    const stepX = this.chartWidth / (hours.length - 1);
+    const toPoints = (serie: SerieHoraire) =>
+      serie
+        .map((valeur, heure) =>
+          valeur === null
+            ? null
+            : {
+                x: heure * stepX,
+                y: padding + (1 - valeur / maxValue) * (this.chartHeight - padding * 2),
+              },
+        )
+        .filter((point): point is { x: number; y: number } => point !== null);
 
-    const toPoints = (series: number[]) =>
-      series.map((v, i) => ({
-        x: i * stepX,
-        y: padding + (1 - v / maxValue) * (this.chartHeight - padding * 2),
-      }));
+    const pointsReels = toPoints(reelles);
+    const pointsPredits = toPoints(predites);
 
-    const realPoints = toPoints(real);
-    const predictedPoints = toPoints(predicted);
+    this.realPath = this.toSmoothPath(pointsReels);
+    this.predictedPath = this.toSmoothPath(pointsPredits);
 
-    this.realPath = this.toSmoothPath(realPoints);
-    this.predictedPath = this.toSmoothPath(predictedPoints);
-    this.areaPath = `${this.realPath} L ${this.chartWidth} ${this.chartHeight} L 0 ${this.chartHeight} Z`;
+    // La zone remplie s'arrête au dernier relevé réel, pas au bord du graphique.
+    if (pointsReels.length >= 2) {
+      const dernier = pointsReels[pointsReels.length - 1];
+      const premier = pointsReels[0];
+      this.areaPath =
+        `${this.realPath} L ${dernier.x} ${this.chartHeight} ` +
+        `L ${premier.x} ${this.chartHeight} Z`;
+    } else {
+      this.areaPath = '';
+    }
   }
 
   private toSmoothPath(points: { x: number; y: number }[]): string {
