@@ -6,6 +6,7 @@ import {
   AdminCree,
   NewAdminRequest,
   RoleUtilisateur,
+  TypeAbonnement,
   UtilisateurDetail,
 } from '../../core/models/utilisateur.model';
 
@@ -104,9 +105,16 @@ export class Utilisateurs implements OnInit {
     return `${u.prenom} ${u.nom}`;
   }
 
+  private abonnementLabels: Record<TypeAbonnement, string> = {
+    BASIC: 'Basic',
+    STANDARD: 'Standard',
+    PREMIUM: 'Premium',
+    CORPORATE: 'Corporate',
+  };
+
   abonnementLabel(u: UtilisateurDetail): string {
     if (!u.abonnementType) return 'Aucun';
-    const label = u.abonnementType === 'PREMIUM' ? 'Premium' : 'Standard';
+    const label = this.abonnementLabels[u.abonnementType];
     return u.abonnementActif ? label : `${label} (inactif)`;
   }
 
