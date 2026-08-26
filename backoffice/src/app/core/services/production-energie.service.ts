@@ -3,12 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ProductionEnergieDetail } from '../models/production-energie.model';
+import { API_BASE_URL } from '../config/api-config';
+
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProductionEnergieService {
-  private readonly baseUrl = 'http://localhost:8080/api/v1/production-energie';
+  private readonly baseUrl = `${API_BASE_URL}/production-energie`;
 
   constructor(private http: HttpClient) {}
 

@@ -3,12 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { SessionChargeDetail } from '../models/session-charge.model';
+import { API_BASE_URL } from '../config/api-config';
+
 
 @Injectable({
   providedIn: 'root',
 })
 export class SessionChargeService {
-  private readonly baseUrl = 'http://localhost:8080/api/v1/sessions-charge';
+  private readonly baseUrl = `${API_BASE_URL}/sessions-charge`;
 
   constructor(private http: HttpClient) {}
 

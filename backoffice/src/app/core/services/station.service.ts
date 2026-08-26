@@ -3,12 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { NewStationRequest, Station } from '../models/station.model';
+import { API_BASE_URL } from '../config/api-config';
+
+
 
 @Injectable({
   providedIn: 'root',
 })
 export class StationService {
-  private readonly baseUrl = 'http://localhost:8080/api/v1/stations';
+  private readonly baseUrl = `${API_BASE_URL}/stations`;
 
   constructor(private http: HttpClient) {}
 
