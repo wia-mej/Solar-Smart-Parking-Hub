@@ -423,3 +423,12 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+.map-section {
+  height: 560px;
+}
+
+app-stations-map {
+  display: block;
+  height: 100%;
+}
