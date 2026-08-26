@@ -7,8 +7,10 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class FirebaseConfig {
@@ -16,12 +18,24 @@ public class FirebaseConfig {
     @PostConstruct
     public void initFirebase() throws IOException {
         if (FirebaseApp.getApps().isEmpty()) {
-            try (InputStream serviceAccount = new ClassPathResource("firebase-service-account.json").getInputStream()) {
-                FirebaseOptions options = FirebaseOptions.builder()
-                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                        .build();
-                FirebaseApp.initializeApp(options);
+            GoogleCredentials credentials;
+            String serviceAccountJson = System.getenv("FIREBASE_SERVICE_ACCOUNT_JSON");
+
+            if (serviceAccountJson != null && !serviceAccountJson.isBlank()) {
+                try (InputStream stream = new ByteArrayInputStream(
+                        serviceAccountJson.getBytes(StandardCharsets.UTF_8))) {
+                    credentials = GoogleCredentials.fromStream(stream);
+                }
+            } else {
+                try (InputStream stream = new ClassPathResource("firebase-service-account.json").getInputStream()) {
+                    credentials = GoogleCredentials.fromStream(stream);
+                }
             }
+
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(credentials)
+                    .build();
+            FirebaseApp.initializeApp(options);
         }
     }
 }

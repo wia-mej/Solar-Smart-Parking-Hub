@@ -3,12 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { AlerteDetail } from '../models/alerte.model';
+import { API_BASE_URL } from '../config/api-config';
+
 
 @Injectable({
   providedIn: 'root',
 })
 export class AlerteService {
-  private readonly baseUrl = 'http://localhost:8080/api/v1/alertes';
+  private readonly baseUrl = `${API_BASE_URL}/alertes`;
 
   constructor(private http: HttpClient) {}
 

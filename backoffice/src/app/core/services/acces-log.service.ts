@@ -3,12 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { AccesLogDetail } from '../models/acces-log.model';
+import { API_BASE_URL } from '../config/api-config';
+
 
 @Injectable({
   providedIn: 'root',
 })
 export class AccesLogService {
-  private readonly baseUrl = 'http://localhost:8080/api/v1/acces-logs';
+  private readonly baseUrl = `${API_BASE_URL}/acces-logs`;
 
   constructor(private http: HttpClient) {}
 

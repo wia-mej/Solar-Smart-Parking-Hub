@@ -4,11 +4,13 @@ import { Observable } from 'rxjs';
 
 import { UtilisateurDetail } from '../models/utilisateur.model';
 import { NewAdminRequest, AdminCree } from '../models/utilisateur.model';
+import { API_BASE_URL } from '../config/api-config';
+
 @Injectable({
   providedIn: 'root',
 })
 export class UtilisateurService {
-  private readonly baseUrl = 'http://localhost:8080/api/v1/utilisateurs';
+  private readonly baseUrl = `${API_BASE_URL}/utilisateurs`;
 
   constructor(private http: HttpClient) {}
 
