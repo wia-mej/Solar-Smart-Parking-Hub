@@ -42,6 +42,15 @@
         Hors service
       </button>
     </div>
+
+    <div class="status-filters">
+      <button class="filter-chip" [class.active]="viewMode === 'list'" (click)="setViewMode('list')">
+        Liste
+      </button>
+      <button class="filter-chip" [class.active]="viewMode === 'map'" (click)="setViewMode('map')">
+        Carte
+      </button>
+    </div>
   </div>
 
   @if (loading) {
@@ -51,6 +60,10 @@
       {{ errorMessage }}
       <button class="retry-btn" (click)="loadStations()">Réessayer</button>
     </div>
+  } @else if (viewMode === 'map') {
+    <section class="map-section">
+      <app-stations-map [stations]="filteredStations" />
+    </section>
   } @else {
     <section class="stations-grid">
       @for (station of filteredStations; track station.id) {

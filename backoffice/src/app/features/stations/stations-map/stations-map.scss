@@ -1,0 +1,51 @@
+.map-container {
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+::ng-deep .station-pin {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+}
+
+::ng-deep .pin-libre {
+  background: var(--teal);
+}
+
+::ng-deep .pin-complet {
+  background: var(--red);
+}
+
+::ng-deep .station-popup {
+  font-family: inherit;
+  min-width: 170px;
+}
+
+::ng-deep .popup-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+::ng-deep .popup-city {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+::ng-deep .popup-dispo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--teal);
+  margin-top: 6px;
+}
+
+::ng-deep .popup-full {
+  color: var(--red);
+}

@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-
+import { StationsMap } from './stations-map/station-map';
 import { StationService } from '../../core/services/station.service';
 import {
   NewBorneRequest,
@@ -12,7 +12,7 @@ import {
 @Component({
   selector: 'app-stations',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, StationsMap],
   templateUrl: './stations.html',
   styleUrl: './stations.scss',
 })
@@ -20,6 +20,11 @@ export class Stations implements OnInit {
   searchTerm = '';
   statusFilter: StatutStation | 'all' = 'all';
 
+  viewMode: 'list' | 'map' = 'list';
+
+  setViewMode(mode: 'list' | 'map'): void {
+    this.viewMode = mode;
+  }
   stations: Station[] = [];
   loading = true;
   errorMessage: string | null = null;
