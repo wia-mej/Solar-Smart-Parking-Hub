@@ -213,6 +213,15 @@
     background: var(--card-bg-soft);
     color: var(--text-muted);
   }
+  &.status-corporate {
+    background: var(--orange-bg, rgba(230, 126, 34, 0.12));
+    color: var(--orange);
+  }
+  &.status-basic {
+    background: var(--card-bg-soft);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+  }
 }
 
 .empty-row {

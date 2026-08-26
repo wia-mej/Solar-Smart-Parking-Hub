@@ -1,6 +1,5 @@
 export type RoleUtilisateur = 'CONDUCTEUR' | 'ADMIN';
-export type TypeAbonnement = 'STANDARD' | 'PREMIUM';
-
+export type TypeAbonnement = 'BASIC' | 'STANDARD' | 'PREMIUM' | 'CORPORATE';
 export interface UtilisateurDetail {
   id: string;
   nom: string;
