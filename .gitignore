@@ -45,3 +45,8 @@ Thumbs.db
 desktop.ini
 .idea/
 .vscode/
+# Déploiement Azure — secrets et état local, jamais committés
+deployment/ansible/acces-cluster.yaml
+deployment/terraform/.terraform/
+deployment/terraform/terraform.tfstate
+deployment/terraform/terraform.tfstate.backup
