@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: solarhub-azure
+resources:
+  - ../../backend.yaml
+  - ../../ai-service.yaml
+  - ../../backoffice.yaml
+  - network-policies.yaml
+  - ingress.yaml
+images:
+  - name: parkree-backend
+    newName: ghcr.io/wia-mej/parkree-backend
+    newTag: latest
+  - name: parkree-ai-service
+    newName: ghcr.io/wia-mej/parkree-ai-service
+    newTag: latest
+  - name: parkree-backoffice
+    newName: ghcr.io/wia-mej/parkree-backoffice
+    newTag: latest
+patches:
+  - target: { kind: Deployment }
+    patch: |
+      - op: add
+        path: /spec/template/spec/nodeSelector
+        value: { role: applicatif }
+  - target: { kind: Deployment }
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent
+  - target: { kind: Deployment, name: backend }
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: FIREBASE_SERVICE_ACCOUNT_JSON
+          valueFrom:
+            secretKeyRef:
+              name: firebase-service-account
+              key: FIREBASE_SERVICE_ACCOUNT_JSON
