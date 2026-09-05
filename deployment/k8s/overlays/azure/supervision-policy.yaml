@@ -1,0 +1,13 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supervision-vers-applications
+spec:
+  podSelector:
+    matchExpressions:
+      - { key: app, operator: In, values: [backend, ai-service] }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: prometheus }

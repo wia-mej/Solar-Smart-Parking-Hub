@@ -5,7 +5,10 @@ resources:
   - ../../backend.yaml
   - ../../ai-service.yaml
   - ../../backoffice.yaml
+  - ../../prometheus.yaml
+  - ../../grafana.yaml
   - network-policies.yaml
+  - supervision-policy.yaml
   - ingress.yaml
 images:
   - name: parkree-backend
@@ -25,7 +28,7 @@ patches:
         value: { role: applicatif }
   - target: { kind: Deployment }
     patch: |
-      - op: replace
+      - op: add
         path: /spec/template/spec/containers/0/imagePullPolicy
         value: IfNotPresent
   - target: { kind: Deployment, name: backend }
