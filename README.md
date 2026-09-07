@@ -31,7 +31,7 @@
 
 **ParkRee** manages a network of solar-powered EV charging hubs: drivers find and reserve a charging spot from a mobile app, station admins run the network from a web backoffice, and an AI service forecasts station energy production and availability to guide those recommendations. The whole stack is containerized, deployed on Kubernetes, and provisioned as code.
 
-This repository is the deliverable of a PFA (Projet de Fin d'Année) internship at Nalida Power — a full-stack + DevOps build covering four services and their production infrastructure.
+This repository is the deliverable of a PFA (Projet de Fin d'Année) internship at Nalida Power, a full-stack + DevOps build covering four services and their production infrastructure.
 
 ## 📑 Table of contents
 
@@ -50,7 +50,7 @@ This repository is the deliverable of a PFA (Projet de Fin d'Année) internship 
 ## ✨ Features
 
 - 🗺️ Real-time map of charging stations with live availability
-- 🔋 Reservation flow — search, book, charge, subscription-based access
+- 🔋 Reservation flow; search, book, charge, subscription-based access
 - 🔐 Firebase-based authentication across mobile and backoffice
 - 🤖 Energy-production forecasting (XGBoost) feeding slot recommendations
 - 📊 Admin dashboard: stations, sessions, revenue and production KPIs
