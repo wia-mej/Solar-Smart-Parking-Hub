@@ -1,59 +1,40 @@
 # Backoffice
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.3.
+Angular administration dashboard for ParkRee. Station operators use it to monitor the network, manage stations and charging points, review reservations, handle user accounts and alerts, and export data. Authenticated against the same Firebase project as the mobile app.
 
-## Development server
+## Features
 
-To start a local development server, run:
+| Section | Purpose |
+|---|---|
+| `dashboard` | Production, occupancy and revenue overview, with live charts |
+| `stations` | Station and charging point management, including a map view |
+| `reservations` | Reservation monitoring |
+| `utilisateurs` | User account management |
+| `alertes` | Alerts and notifications |
+| `export` | Data export |
+| `login` | Firebase authenticated sign in |
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Running locally
 
 ```bash
-ng generate --help
+npm install
+npm start
 ```
+
+Once the dev server is running, open `http://localhost:4200`. The application reloads automatically when source files change.
 
 ## Building
-
-To build the project run:
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+The production build is written to `dist/backoffice/browser`. The Docker image builds this output and serves it with nginx on port 80.
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Tests
 
 ```bash
 ng test
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Runs the unit tests with Vitest.
