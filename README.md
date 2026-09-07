@@ -1,8 +1,8 @@
 <div align="center">
 
-# ☀️ ParkRee — Solar Smart Parking Hub
+# Solar Smart Parking Hub (ParkRee)
 
-**A connected platform for solar-powered EV charging hubs**, built end-to-end during a PFA internship at **Nalida Power**.
+A connected platform for solar powered EV charging hubs, built end to end during a PFA internship at Nalida Power.
 
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=flat&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat&logo=springboot&logoColor=white)
@@ -20,128 +20,129 @@
 ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=flat&logo=prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat&logo=grafana&logoColor=white)
 
-![Status](https://img.shields.io/badge/status-PFA_internship_project-blue)
-![License](https://img.shields.io/badge/license-private-lightgrey)
-
 </div>
 
----
+## Overview
 
-## 📖 Overview
+ParkRee manages a network of solar powered EV charging hubs. Drivers find and reserve a charging spot from a mobile app, station administrators manage the network from a web backoffice, and an AI service forecasts station energy production to guide those recommendations. The stack is fully containerized, deployed on Kubernetes, and provisioned as code.
 
-**ParkRee** manages a network of solar-powered EV charging hubs: drivers find and reserve a charging spot from a mobile app, station admins run the network from a web backoffice, and an AI service forecasts station energy production and availability to guide those recommendations. The whole stack is containerized, deployed on Kubernetes, and provisioned as code.
+This repository is the deliverable of a PFA (Projet de Fin d'Année) internship at Nalida Power: a full stack and DevOps build covering four services and their production infrastructure.
 
-This repository is the deliverable of a PFA (Projet de Fin d'Année) internship at Nalida Power — a full-stack + DevOps build covering four services and their production infrastructure.
+## Contents
 
-## 📑 Table of contents
+1. Features
+2. Architecture
+3. Technology stack
+4. Project structure
+5. Cloud infrastructure
+6. Git workflow
+7. Getting started
+8. Continuous integration
+9. Monitoring
+10. Report and documentation
+11. Author
 
-- [Features](#-features)
-- [Architecture](#-architecture)
-- [Tech stack](#-tech-stack)
-- [Project structure](#-project-structure)
-- [Cloud infrastructure](#%EF%B8%8F-cloud-infrastructure)
-- [Git workflow](#-git-workflow)
-- [Getting started](#-getting-started)
-- [CI/CD](#-cicd)
-- [Monitoring](#-monitoring)
-- [Report & documentation](#-report--documentation)
-- [Author](#-author)
+## Features
 
-## ✨ Features
+| Feature | Description |
+|---|---|
+| Live station map | Real time view of charging station availability |
+| Reservation flow | Search, book, charge, and manage subscription access |
+| Authentication | Firebase authentication shared across mobile and backoffice |
+| Energy forecasting | XGBoost model predicting station production, feeding slot recommendations |
+| Admin dashboard | Stations, sessions, revenue and production indicators |
+| Continuous integration | One pipeline per service, triggered only by changes in that service's folder |
 
-- 🗺️ Real-time map of charging stations with live availability
-- 🔋 Reservation flow — search, book, charge, subscription-based access
-- 🔐 Firebase-based authentication across mobile and backoffice
-- 🤖 Energy-production forecasting (XGBoost) feeding slot recommendations
-- 📊 Admin dashboard: stations, sessions, revenue and production KPIs
-- 📦 One CI pipeline per service, each triggered only by its own folder's changes
-
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart LR
     subgraph Clients
-        M["📱 Mobile app<br/>React Native"]
-        B["🖥️ Backoffice<br/>Angular"]
+        M[Mobile app<br/>React Native]
+        B[Backoffice<br/>Angular]
     end
 
-    subgraph "Kubernetes cluster (k3s)"
-        API["⚙️ Backend API<br/>Spring Boot"]
-        AI["🤖 AI service<br/>FastAPI + XGBoost"]
+    subgraph Cluster["Kubernetes cluster (k3s)"]
+        API[Backend API<br/>Spring Boot]
+        AI[AI service<br/>FastAPI and XGBoost]
     end
 
-    DB[("🗄️ MongoDB Atlas")]
-    AUTH["🔐 Firebase Auth"]
+    DB[(MongoDB Atlas)]
+    AUTH[Firebase Authentication]
 
-    M -->|REST| API
-    B -->|REST| API
+    M --> API
+    B --> API
     M --> AUTH
     B --> AUTH
     API --> AI
     API --> DB
 
-    subgraph "Infrastructure as Code"
-        TF["Terraform<br/>provisions VMs + network"] --> ANS["Ansible<br/>installs & configures k3s"]
+    subgraph IaC[Infrastructure as Code]
+        TF[Terraform] --> ANS[Ansible]
         ANS --> API
     end
 
-    ARC["Azure Arc<br/>GitOps cluster supervision"] -.-> API
-    MON["Prometheus / Grafana"] -.->|metrics| API
+    ARC[Azure Arc] -.-> API
+    MON[Prometheus and Grafana] -.-> API
 ```
 
-Backend, AI service, backoffice and mobile each live in their own folder with their own Dockerfile and CI pipeline. The backend is the single entry point for both clients and orchestrates calls to the AI service and to MongoDB.
+`backend`, `ai-service`, `backoffice` and `mobile` each live in their own folder with their own Dockerfile and CI pipeline. The backend is the single entry point for both clients and coordinates calls to the AI service and to MongoDB.
 
-## 🧰 Tech stack
+## Technology stack
 
 | Layer | Technology |
 |---|---|
 | Backend API | Spring Boot (Java) |
-| AI / prediction service | FastAPI (Python) + XGBoost |
+| AI and prediction service | FastAPI (Python) with XGBoost |
 | Mobile app | React Native |
 | Backoffice | Angular |
 | Database | MongoDB Atlas |
-| Auth | Firebase Authentication |
+| Authentication | Firebase Authentication |
 | Containerization | Docker |
 | Orchestration | Kubernetes (k3s) |
-| Infrastructure as Code | Terraform + Ansible |
-| Cloud (production demo) | Microsoft Azure + Azure Arc |
-| CI/CD | GitHub Actions |
-| Monitoring | Prometheus + Grafana |
+| Infrastructure as code | Terraform and Ansible |
+| Cloud (production demonstration) | Microsoft Azure and Azure Arc |
+| Continuous integration | GitHub Actions |
+| Monitoring | Prometheus and Grafana |
 
-## 📂 Project structure
+## Project structure
 
-This is a monorepo — one repo, one folder per service. Each service has its own CI pipeline that only runs when its folder changes.
+This is a monorepo: one repository, one folder per service. Each service has its own continuous integration pipeline, triggered only when its folder changes.
 
 ```
 backend/         Spring Boot API (users, stations, chargers, reservations, sessions)
 ai-service/      FastAPI microservice serving the energy prediction model
 mobile/          React Native app for drivers
 backoffice/      Angular dashboard for admins
-deployment/      Terraform (Azure) + Ansible playbooks + Kubernetes manifests
-docs/            Specs, diagrams, planning
+deployment/      Terraform (Azure), Ansible playbooks and Kubernetes manifests
+docs/            Specifications, diagrams and planning
 ```
 
-## ☁️ Cloud infrastructure
+## Cloud infrastructure
 
-The full stack is containerized and deployed on a self-managed **k3s** Kubernetes cluster:
+The stack is deployed on a self managed k3s Kubernetes cluster, provisioned entirely as code.
 
-- **Terraform** provisions the cloud infrastructure declaratively — VMs, virtual network, public IPs, NSG rules — from a single set of `.tf` files (`deployment/terraform`), reproducible and destroyable on demand.
-- **Ansible** takes over once the machines exist: it installs and configures k3s on the Terraform-provisioned VMs with no agent required on the target.
-- **Azure Arc** connects the self-managed cluster to Azure for GitOps-based supervision from the Azure portal, alongside the standard `kubectl` access.
-- **GitHub Actions** runs one CI/CD pipeline per service, building, testing and deploying only what changed.
-- **Prometheus & Grafana** collect and visualize cluster and application metrics.
+| Component | Role |
+|---|---|
+| Terraform | Provisions the cloud infrastructure declaratively (virtual machines, network, public IP addresses, security rules) from the configuration in `deployment/terraform` |
+| Ansible | Configures the machines once they exist: installs and sets up k3s on the servers Terraform created, with no agent required on the target |
+| Azure Arc | Connects the self managed cluster to Azure so it can be supervised through GitOps from the Azure portal, alongside standard kubectl access |
+| GitHub Actions | Runs one continuous integration and deployment pipeline per service, building, testing and deploying only what changed |
+| Prometheus and Grafana | Collect and visualize cluster and application metrics |
 
-The project was deployed end-to-end in production on **Microsoft Azure** (Azure for Students subscription) to validate the full chain — mobile app, backoffice and backend all running against real cloud infrastructure. That deployment has since been **torn down** (`terraform destroy`) to stop billing now that the internship demonstration is complete; the entire environment is reproducible in minutes with `terraform apply` followed by the Ansible playbook, against any cloud provider Terraform supports.
+The project was deployed in production on Microsoft Azure (Azure for Students subscription) to validate the complete chain: mobile application, backoffice and backend all running against real cloud infrastructure. That deployment has since been removed (`terraform destroy`) to stop billing now that the internship demonstration is complete. The environment is reproducible in minutes with `terraform apply` followed by the Ansible playbook, against any cloud provider supported by Terraform.
 
-## 🔀 Git workflow
+## Git workflow
 
-- `main` — always deployable, protected, triggers CD
-- `dev` — day-to-day integration branch
-- `feature/*` — one branch per task, merged into `dev` via PR
+| Branch | Purpose |
+|---|---|
+| `main` | Always deployable, protected, triggers continuous deployment |
+| `dev` | Day to day integration branch |
+| `feature/*` | One branch per task, merged into `dev` through a pull request |
 
-## 🚀 Getting started
+## Getting started
 
-Clone the repo:
+Clone the repository:
 ```bash
 git clone https://github.com/wia-mej/Solar-Smart-Parking-Hub.git
 cd Solar-Smart-Parking-Hub
@@ -153,7 +154,7 @@ cd ai-service
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
-Runs on `http://localhost:8000`. Check `http://localhost:8000/health` to confirm it's up.
+Runs on `http://localhost:8000`. Check `http://localhost:8000/health` to confirm it is up.
 
 ### Backend
 ```bash
@@ -175,19 +176,18 @@ npm install
 npx react-native start
 ```
 
-## 🧪 CI/CD
+## Continuous integration
 
-Each service (`backend`, `ai-service`, `backoffice`, `mobile`) has its own GitHub Actions workflow under `.github/workflows/`, path-filtered so a change in one service never triggers a rebuild of the others.
+Each service, `backend`, `ai-service`, `backoffice` and `mobile`, has its own GitHub Actions workflow under `.github/workflows`, filtered by path so a change in one service never triggers a rebuild of the others.
 
-## 📊 Monitoring
+## Monitoring
 
-Prometheus scrapes application and cluster metrics; Grafana dashboards visualize them alongside the backoffice's own production and revenue KPIs.
+Prometheus collects metrics from the application and the cluster. Grafana visualizes them alongside the backoffice's own production and revenue indicators.
 
-## 📄 Report & documentation
+## Report and documentation
 
-This project was built as the deliverable of a PFA internship at **Nalida Power**. The full internship report — architecture decisions, implementation details, and the production deployment walkthrough — is available on request. Additional specs and diagrams live under `docs/`.
+This project was built as the deliverable of a PFA internship at Nalida Power. The complete internship report, covering architecture decisions, implementation details and the production deployment, is available on request. Additional specifications and diagrams are stored in `docs/`.
 
-## 👤 Author
+## Author
 
-**Wiame Jaoui** — 2nd-year engineering student, ESI Rabat (ISITD)
-PFA intern @ Nalida Power
+Wiame Jaoui, second year engineering student at ESI Rabat (ISITD), PFA intern at Nalida Power.
