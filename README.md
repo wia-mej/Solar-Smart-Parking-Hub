@@ -58,23 +58,24 @@ This repository is the deliverable of a PFA (Projet de Fin d'Année) internship 
 
 ### Mobile application
 
-| Home | Stations | Reservations |
-|---|---|---|
-| ![Home screen](docs/screenshots/mobile_accueil.jpg) | ![Stations list](docs/screenshots/mobile_stations.jpg) | ![Reservations](docs/screenshots/mobile_reservations.jpg) |
-
-| Charging session | Profile |
-|---|---|
-| ![Charging session](docs/screenshots/mobile_charge.jpg) | ![Profile](docs/screenshots/mobile_profil.jpg) |
+<table>
+<tr>
+<td align="center"><img src="docs/screenshots/mobile_accueil.jpg" width="150"><br>Home</td>
+<td align="center"><img src="docs/screenshots/mobile_stations.jpg" width="150"><br>Stations</td>
+<td align="center"><img src="docs/screenshots/mobile_reservations.jpg" width="150"><br>Reservations</td>
+<td align="center"><img src="docs/screenshots/mobile_charge.jpg" width="150"><br>Charging session</td>
+<td align="center"><img src="docs/screenshots/mobile_profil.jpg" width="150"><br>Profile</td>
+</tr>
+</table>
 
 ### Backoffice
 
-| Dashboard |
-|---|
-| ![Backoffice dashboard](docs/screenshots/backoffice_dashboard.png) |
-
-| Stations management |
-|---|
-| ![Stations management](docs/screenshots/backoffice_stations.png) |
+<table>
+<tr>
+<td align="center"><img src="docs/screenshots/backoffice_dashboard.png" width="400"><br>Dashboard</td>
+<td align="center"><img src="docs/screenshots/backoffice_stations.png" width="400"><br>Stations management</td>
+</tr>
+</table>
 
 All screenshots were taken against the production deployment on Microsoft Azure described in the section below.
 
