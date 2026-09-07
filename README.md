@@ -31,16 +31,17 @@ This repository is the deliverable of a PFA (Projet de Fin d'Année) internship 
 ## Contents
 
 1. Features
-2. Architecture
-3. Technology stack
-4. Project structure
-5. Cloud infrastructure
-6. Git workflow
-7. Getting started
-8. Continuous integration
-9. Monitoring
-10. Report and documentation
-11. Author
+2. Screenshots
+3. Architecture
+4. Technology stack
+5. Project structure
+6. Cloud infrastructure
+7. Git workflow
+8. Getting started
+9. Continuous integration
+10. Monitoring
+11. Report and documentation
+12. Author
 
 ## Features
 
@@ -52,6 +53,30 @@ This repository is the deliverable of a PFA (Projet de Fin d'Année) internship 
 | Energy forecasting | XGBoost model predicting station production, feeding slot recommendations |
 | Admin dashboard | Stations, sessions, revenue and production indicators |
 | Continuous integration | One pipeline per service, triggered only by changes in that service's folder |
+
+## Screenshots
+
+### Mobile application
+
+| Home | Stations | Reservations |
+|---|---|---|
+| ![Home screen](docs/screenshots/mobile_accueil.jpg) | ![Stations list](docs/screenshots/mobile_stations.jpg) | ![Reservations](docs/screenshots/mobile_reservations.jpg) |
+
+| Charging session | Profile |
+|---|---|
+| ![Charging session](docs/screenshots/mobile_charge.jpg) | ![Profile](docs/screenshots/mobile_profil.jpg) |
+
+### Backoffice
+
+| Dashboard |
+|---|
+| ![Backoffice dashboard](docs/screenshots/backoffice_dashboard.png) |
+
+| Stations management |
+|---|
+| ![Stations management](docs/screenshots/backoffice_stations.png) |
+
+All screenshots were taken against the production deployment on Microsoft Azure described in the section below.
 
 ## Architecture
 
