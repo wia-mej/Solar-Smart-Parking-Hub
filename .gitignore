@@ -51,3 +51,6 @@ deployment/terraform/.terraform/
 deployment/terraform/terraform.tfstate
 deployment/terraform/terraform.tfstate.backup
 deployment/k8s/overlays/azure/assemble.yaml
+deployment/terraform/.terraform/
+deployment/terraform/*.tfstate
+deployment/terraform/*.tfstate.backup
